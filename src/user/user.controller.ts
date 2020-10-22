@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nes
 import { from, Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { DeleteResult, UpdateResult } from 'typeorm';
-import { User } from './user.interface';
+import { User, UserRole } from './user.interface';
 import { UserService } from './user.service';
 import { JwtToken } from '../auth/auth.interface';
 import { Roles } from '../auth/auth.decorator';
@@ -13,7 +13,7 @@ import { JwtAuthGuard } from '../auth/auth.guard';
 export class UserController {
     constructor(private readonly userService: UserService) { }
 
-    @Roles('admin')
+    @Roles(UserRole.ADMIN)
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Get()
     findAll(): Observable<User[]> {
@@ -48,14 +48,14 @@ export class UserController {
         return from(this.userService.updateOne(id, user));
     }
 
-    @Roles('admin')
+    @Roles(UserRole.ADMIN)
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Delete(':id')
     delete(@Param('id') id: string): Observable<DeleteResult> {
         return from(this.userService.deleteOne(id));
     }
 
-    @Roles('admin')
+    @Roles(UserRole.ADMIN)
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Put(':id/role')
     updateRole(@Param('id') id: string, @Body() user: User): Observable<UpdateResult> {
