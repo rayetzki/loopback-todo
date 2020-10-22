@@ -2,8 +2,8 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { from, Observable, throwError } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
-import { AuthService } from 'src/auth/auth.service';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+import { AuthService } from '../auth/auth.service';
 import { UserEntity } from './user.entity';
 import { User } from './user.interface';
 
@@ -53,13 +53,17 @@ export class UserService {
         return from(this.userRepository.update(id, user))
     }
 
+    updateRole(id: string, user: User): Observable<UpdateResult> {
+        return from(this.userRepository.update(id, user));
+    }
+
     deleteOne(id: string): Observable<DeleteResult> {
         return from(this.userRepository.delete(id));
     }
 
-    login(user: User): Observable<string> {
+    login(email: string, password: string): Observable<string> {
         return from(
-            this.validate(user.email, user.password).pipe(switchMap((user: User) => {
+            this.validate(email, password).pipe(switchMap((user: User) => {
                 if (user) {
                     return this.authService.generateJWT(user).pipe(map((jwt: string) => jwt));
                 } else {
@@ -69,12 +73,8 @@ export class UserService {
         )
     }
 
-    findByEmail(email: string): Observable<User> {
-        return from(this.userRepository.findOne({ email }));
-    }
-
     validate(email: string, password: string): Observable<User> {
-        return from(this.findByEmail(email).pipe(
+        return from(this.userRepository.findOne({ email })).pipe(
             switchMap((user: User) => {
                 return this.authService
                     .comparePasswords(password, user.password)
@@ -87,6 +87,6 @@ export class UserService {
                         }
                     }))
             })
-        ))
+        )
     }
 }
