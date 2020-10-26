@@ -18,6 +18,9 @@ export class UserEntity {
     @Column({ unique: true })
     email: string;
 
+    @Column({ default: "" })
+    avatar: string;
+
     @Column()
     password: string;
 

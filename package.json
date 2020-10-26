@@ -32,6 +32,7 @@
     "@nestjs/typeorm": "^7.1.4",
     "@types/passport-jwt": "^3.0.3",
     "bcrypt": "^5.0.0",
+    "cloudinary": "^1.23.0",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
     "pg": "^8.4.1",

@@ -6,6 +6,7 @@ export interface User {
     nutrition?: string
     password?: string
     role?: UserRole
+    avatar?: string
 }
 
 export interface PaginatedUsers {
