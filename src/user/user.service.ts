@@ -33,15 +33,14 @@ export class UserService {
             .findAndCount({ skip: offset, take: limit }))
             .pipe(map(([users, count]) => {
                 users.forEach((user: User) => delete user.password)
-
                 return {
                     users,
                     totalItems: count,
-                    itemCount: users.length,
+                    itemCount: limit || users.length,
                     currentPage: offset,
                     itemsPerPage: offset ? offset * limit : count
                 };
-            }));
+            }), catchError(error => throwError(error)));
     }
 
     findOne(id: string): Observable<User> {
@@ -50,6 +49,13 @@ export class UserService {
                 delete user.password;
                 return user;
             })
+        );
+    }
+
+    search(name: string): Observable<User[]> {
+        return from(this.userRepository.find({ where: { name } })).pipe(
+            map((users: User[]) => users),
+            catchError(error => throwError(error))
         );
     }
 

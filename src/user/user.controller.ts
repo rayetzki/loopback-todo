@@ -16,16 +16,22 @@ export class UserController {
     @Roles(UserRole.ADMIN)
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Get()
-    findAll(@Query() query): Observable<PaginatedUsers> {
-        const limit: number = query.limit || 0;
-        const offset: number = query.offset || 0;
-        return from(this.userService.findAll(limit, offset));
+    findAll(
+        @Query('limit') limit = 0,
+        @Query('offset') offset = 0,
+        @Query('id') id: string
+    ): Observable<PaginatedUsers | User> {
+        if (id) {
+            return from(this.userService.findOne(id));
+        } else {
+            return from(this.userService.findAll(limit, offset));
+        }
     }
 
     @UseGuards(JwtAuthGuard)
-    @Get(':id')
-    findOne(@Param('id') id: string): Observable<User> {
-        return from(this.userService.findOne(id));
+    @Get('/search')
+    search(@Query('name') name: string): Observable<User[]> {
+        return from(this.userService.search(name));
     }
 
     @Post()
