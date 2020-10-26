@@ -5,7 +5,7 @@ import { catchError, map, switchMap } from 'rxjs/operators';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { AuthService } from '../auth/auth.service';
 import { UserEntity } from './user.entity';
-import { User } from './user.interface';
+import { PaginatedUsers, User } from './user.interface';
 
 @Injectable()
 export class UserService {
@@ -31,13 +31,13 @@ export class UserService {
             }))
     }
 
-    findAll(): Observable<User[]> {
-        return from(this.userRepository.find()).pipe(
-            map((users: User[]) => {
-                users.forEach((user: User) => delete user.password)
-                return users;
-            })
-        );
+    findAll(limit: number, offset: number): Observable<PaginatedUsers> {
+        return from(this.userRepository
+            .findAndCount({ skip: offset, take: limit }))
+            .pipe(map(([users, count]) => {
+                users.forEach((user: User) => delete user.password);
+                return { users, count, limit, offset };
+            }));
     }
 
     findOne(id: string): Observable<User> {

@@ -1,8 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { from, Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { DeleteResult, UpdateResult } from 'typeorm';
-import { User, UserRole } from './user.interface';
+import { PaginatedUsers, User, UserRole } from './user.interface';
 import { UserService } from './user.service';
 import { JwtToken } from '../auth/auth.interface';
 import { Roles } from '../auth/auth.decorator';
@@ -16,8 +16,10 @@ export class UserController {
     @Roles(UserRole.ADMIN)
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Get()
-    findAll(): Observable<User[]> {
-        return from(this.userService.findAll());
+    findAll(@Query() query): Observable<PaginatedUsers> {
+        const limit = query.limit || 0;
+        const offset = query.offset || 0;
+        return from(this.userService.findAll(limit, offset));
     }
 
     @UseGuards(JwtAuthGuard)
