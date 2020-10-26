@@ -17,8 +17,8 @@ export class UserController {
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Get()
     findAll(@Query() query): Observable<PaginatedUsers> {
-        const limit = query.limit || 0;
-        const offset = query.offset || 0;
+        const limit: number = query.limit || 0;
+        const offset: number = query.offset || 0;
         return from(this.userService.findAll(limit, offset));
     }
 

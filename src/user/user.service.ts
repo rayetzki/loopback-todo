@@ -21,13 +21,10 @@ export class UserService {
                 return from(this.userRepository.save({
                     ...user,
                     password: passwordHash
-                })).pipe(
-                    map((user: User) => {
-                        delete user.password;
-                        return user;
-                    }),
-                    catchError(error => throwError(error))
-                )
+                })).pipe(map((user: User) => {
+                    delete user.password;
+                    return user;
+                }), catchError(error => throwError(error)))
             }))
     }
 
@@ -35,8 +32,15 @@ export class UserService {
         return from(this.userRepository
             .findAndCount({ skip: offset, take: limit }))
             .pipe(map(([users, count]) => {
-                users.forEach((user: User) => delete user.password);
-                return { users, count, limit, offset };
+                users.forEach((user: User) => delete user.password)
+
+                return {
+                    users,
+                    totalItems: count,
+                    itemCount: users.length,
+                    currentPage: offset,
+                    itemsPerPage: offset ? offset * limit : count
+                };
             }));
     }
 
@@ -83,7 +87,7 @@ export class UserService {
                             delete user.password;
                             return user;
                         } else {
-                            throw new BadRequestException('User doesn\'t exist');
+                            throw new BadRequestException('Password is not correct');
                         }
                     }))
             })

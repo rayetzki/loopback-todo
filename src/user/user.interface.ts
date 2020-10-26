@@ -10,10 +10,11 @@ export interface User {
 
 export interface PaginatedUsers {
     users: User[]
-    offset?: number
-    limit?: number
-    count?: number
-}
+    totalItems: number
+    itemCount: number
+    currentPage: number
+    itemsPerPage: number
+};
 
 export enum UserRole {
     ADMIN = 'admin',
