@@ -1,5 +1,5 @@
-import { Inject, Injectable } from "@nestjs/common";
-import { UploadApiErrorResponse, UploadApiResponse, v2 as Cloudinary } from 'cloudinary';
+import { HttpException, Inject, Injectable, InternalServerErrorException } from "@nestjs/common";
+import { DeleteApiResponse, ResourceApiResponse, UploadApiErrorResponse, UploadApiResponse, v2 as Cloudinary } from 'cloudinary';
 import { from, Observable, throwError } from "rxjs";
 import { catchError, map } from "rxjs/operators";
 
@@ -9,12 +9,22 @@ export class CloudinaryService {
 
     upload(avatar: string): Observable<UploadApiResponse | UploadApiErrorResponse> {
         return from(this.cloudinaryService.uploader.upload(avatar)).pipe(
-            map((uploadResponse: UploadApiResponse) => {
-                if (uploadResponse.created_at) {
-                    return uploadResponse;
-                };
-            }),
+            map((uploadResponse: UploadApiResponse) => uploadResponse),
             catchError((error: UploadApiErrorResponse) => throwError(error))
         );
+    }
+
+    updateAvatar(url: string, avatar: string): Promise<void | UploadApiResponse | UploadApiErrorResponse> {
+        return this.cloudinaryService.api.resources().then((images: ResourceApiResponse) => {
+            const image: ResourceApiResponse['resources']['0'] = images.resources.find(image => image.secure_url === url);
+            this.cloudinaryService.uploader.destroy(image.public_id).then((deleteResponse: DeleteApiResponse) => {
+                if (deleteResponse.http_code === 200) {
+                    return this.upload(avatar)
+                        .toPromise<UploadApiResponse | UploadApiErrorResponse>()
+                        .then((uploadResponse: UploadApiResponse) => uploadResponse)
+                        .catch((error: UploadApiErrorResponse) => new InternalServerErrorException({ message: 'Could\'nt update avatar', ...error }));
+                } else new InternalServerErrorException({ message: 'Could\'nt update avatar' });
+            }).catch((error: DeleteApiResponse) => new HttpException(error.message, 500))
+        });
     }
 }

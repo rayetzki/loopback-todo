@@ -66,6 +66,16 @@ export class UserController {
         return from(this.userService.uploadAvatar(id, avatar));
     }
 
+    @Roles(UserRole.USER)
+    @UseGuards(JwtAuthGuard)
+    @Put('/avatar')
+    updateAvatar(
+        @Query('id') id: string,
+        @Body('avatar') avatar: string
+    ) {
+        return from(this.userService.updateAvatar(id, avatar));
+    }
+
     @Roles(UserRole.ADMIN)
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Delete(':id')

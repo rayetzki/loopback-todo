@@ -24,10 +24,10 @@ export class UserService {
                 return from(this.userRepository.save({
                     ...user,
                     password: passwordHash
-                })).pipe(map((user: User) => {
-                    delete user.password;
-                    return user;
-                }), catchError(error => throwError(error)))
+                })).pipe(
+                    map((user: User) => user),
+                    catchError(error => throwError(error))
+                )
             }))
     }
 
@@ -35,7 +35,6 @@ export class UserService {
         return from(this.userRepository
             .findAndCount({ skip: offset, take: limit }))
             .pipe(map(([users, count]) => {
-                users.forEach((user: User) => delete user.password)
                 return {
                     users,
                     totalItems: count,
@@ -47,12 +46,7 @@ export class UserService {
     }
 
     findOne(id: string): Observable<User> {
-        return from(this.userRepository.findOne(id)).pipe(
-            map((user: User) => {
-                delete user.password;
-                return user;
-            })
-        );
+        return from(this.userRepository.findOne(id)).pipe(map((user: User) => user));
     }
 
     search(name: string): Observable<User[]> {
@@ -74,23 +68,50 @@ export class UserService {
         return from(this.userRepository.delete(id));
     }
 
-    uploadAvatar(id: string, avatar: string): Observable<User | BadRequestException> {
-        const user: Observable<User> = from(this.findOne(id));
+    uploadAvatar(id: string, avatar: string): Observable<User> {
         return from(this.cloudinaryService.upload(avatar)).pipe(
             map((uploadResponse: UploadApiResponse) => {
                 if (uploadResponse.created_at) {
                     this.updateOne(id, { avatar: uploadResponse.secure_url }).pipe(
                         map((updateResult: UpdateResult) => {
-                            if (updateResult.affected === 1) {
-                                return { ...user, avatar: uploadResponse.secure_url }
+                            if (updateResult) {
+                                this.findOne(id).pipe(map((user: User) => user))
                             };
                         }),
-                        catchError((error: UpdateResult) => throwError(error))
+                        catchError(error => throwError(error))
                     )
                 } else return new BadRequestException("Sorry, couldnt add an avatar")
             }),
             catchError((error: UploadApiErrorResponse) => throwError(error))
         )
+    }
+
+    updateAvatar(id: string, avatar: string): Observable<void> {
+        return from(this.userRepository.findOne(id)).pipe(
+            map((user: User) => {
+                if (user.avatar) {
+                    from(this.cloudinaryService.updateAvatar(user.avatar, avatar)).pipe(
+                        map((uploadResponse: UploadApiResponse) => {
+                            from(this.userRepository.update(id, { avatar: uploadResponse.secure_url })).pipe(
+                                map((updateResult: UpdateResult) => {
+                                    if (updateResult) {
+                                        from(this.userRepository.findOne(id)).pipe(
+                                            map((user: User) => user),
+                                            catchError(error => throwError(error))
+                                        )
+                                    }
+                                })
+                            )
+                        })
+                    );
+                } else {
+                    this.uploadAvatar(id, avatar).pipe(
+                        map((user: User) => user),
+                        catchError(error => throwError(error))
+                    );
+                }
+            })
+        );
     }
 
     login(email: string, password: string): Observable<string> {
@@ -112,7 +133,6 @@ export class UserService {
                     .comparePasswords(password, user.password)
                     .pipe(map((match: boolean) => {
                         if (match) {
-                            delete user.password;
                             return user;
                         } else {
                             throw new BadRequestException('Password is not correct');
