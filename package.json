@@ -23,6 +23,9 @@
     "typeorm:migrate": "npm run typeorm migration:run"
   },
   "dependencies": {
+    "@nest-middlewares/cors": "^6.0.1",
+    "@nest-middlewares/csurf": "^6.0.0",
+    "@nest-middlewares/helmet": "^6.0.0",
     "@nestjs/common": "^7.0.0",
     "@nestjs/config": "^0.5.0",
     "@nestjs/core": "^7.0.0",
