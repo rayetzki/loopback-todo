@@ -1,5 +1,6 @@
-import { BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { UserRole } from "./user.interface";
+import { RecipeEntity } from "../recipes/recipes.entity";
 
 @Entity("users")
 export class UserEntity {
@@ -27,8 +28,6 @@ export class UserEntity {
     @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
     role: UserRole;
 
-    @BeforeInsert()
-    emailToLowerCase() {
-        this.email = this.email.toLowerCase();
-    }
+    @OneToMany(() => RecipeEntity, recipe => recipe.id)
+    recipes: RecipeEntity[];
 }

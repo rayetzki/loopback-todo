@@ -8,6 +8,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { RecipeEntity } from './recipes/recipes.entity';
 
 @Module({
   imports: [
@@ -16,10 +17,12 @@ import { AuthModule } from './auth/auth.module';
       type: 'postgres',
       url: process.env.DATABASE_URL,
       autoLoadEntities: true,
-      synchronize: true
+      synchronize: true,
+      entities: [__dirname.concat('/../**/*.entity.js')]
     }),
     UserModule,
-    AuthModule
+    AuthModule,
+    RecipeEntity
   ],
   controllers: [AppController],
   providers: [AppService]

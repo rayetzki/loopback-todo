@@ -1,7 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { NutritionType, RecipeIngredients } from "./recipes.interface";
+import { UserEntity } from "../user/user.entity";
 
-@Entity('recipes')
+@Entity("recipes")
 export class RecipeEntity {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -12,8 +13,8 @@ export class RecipeEntity {
     @Column({ type: "varchar" })
     description: string;
 
-    @Column({ type: "array" })
-    ingredients: Array<RecipeIngredients>;
+    @Column({ type: "simple-array" })
+    ingredients: RecipeIngredients[];
 
     @Column()
     cost: string;
@@ -23,4 +24,7 @@ export class RecipeEntity {
 
     @Column({ default: NutritionType.ANY })
     nutritionType: NutritionType;
+
+    @ManyToOne(() => UserEntity, user => user.id)
+    user: UserEntity;
 }
