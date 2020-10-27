@@ -18,6 +18,7 @@ import { RecipeEntity } from './recipes/recipes.entity';
       url: process.env.DATABASE_URL,
       autoLoadEntities: true,
       synchronize: true,
+      logger: "advanced-console",
       entities: [__dirname.concat('/../**/*.entity.js')]
     }),
     UserModule,

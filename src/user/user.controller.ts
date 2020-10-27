@@ -7,7 +7,7 @@ import { UserService } from './user.service';
 import { JwtToken } from '../auth/auth.interface';
 import { Roles } from '../auth/auth.decorator';
 import { RolesGuard } from '../auth/role.guard';
-import { JwtAuthGuard } from '../auth/auth.guard';
+import { IsUserGuard, JwtAuthGuard } from '../auth/auth.guard';
 
 @Controller('users')
 export class UserController {
@@ -51,7 +51,7 @@ export class UserController {
     }
 
     @Roles(UserRole.USER)
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, IsUserGuard)
     @Put('/avatar')
     updateAvatar(
         @Query('id') id: string,
@@ -60,7 +60,7 @@ export class UserController {
         return from(this.userService.updateAvatar(id, avatar));
     }
 
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, IsUserGuard)
     @Put(':id')
     update(@Param('id') id: string, @Body() user: User): Observable<UpdateResult> {
         return from(this.userService.updateOne(id, user));
