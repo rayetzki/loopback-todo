@@ -9,7 +9,7 @@ export interface User {
     password?: string
     role?: UserRole
     avatar?: string
-    recipes: Recipe[]
+    recipes?: Recipe[]
 }
 
 export interface PaginatedUsers {
