@@ -1,3 +1,5 @@
+import { Recipe } from "../recipes/recipes.interface";
+
 export interface User {
     id?: string
     name?: string
@@ -7,6 +9,7 @@ export interface User {
     password?: string
     role?: UserRole
     avatar?: string
+    recipes: Recipe[]
 }
 
 export interface PaginatedUsers {

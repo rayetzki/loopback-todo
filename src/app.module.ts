@@ -28,7 +28,6 @@ import { RecipeEntity } from './recipes/recipes.entity';
   controllers: [AppController],
   providers: [AppService]
 })
-
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     HelmetMiddleware.configure({ xssFilter: true });

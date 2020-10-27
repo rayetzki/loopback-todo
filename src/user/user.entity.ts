@@ -28,6 +28,6 @@ export class UserEntity {
     @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
     role: UserRole;
 
-    @OneToMany(() => RecipeEntity, recipe => recipe.id)
+    @OneToMany(() => RecipeEntity, recipe => recipe.author)
     recipes: RecipeEntity[];
 }

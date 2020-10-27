@@ -1,11 +1,18 @@
+import { User } from "src/user/user.interface";
+
 export interface Recipe {
-    id?: string
-    name?: string
-    description?: string
+    id: string
+    createdAt: Date
+    updatedAt: Date
+    name: string
+    slug: string
+    description: string
+    body: string
     ingredients: Array<RecipeIngredients>
     cost: string
     cookingTime: string
     nutritionType: NutritionType
+    author: User
 }
 
 export interface RecipeIngredients {
