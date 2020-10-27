@@ -83,7 +83,7 @@ export class UserController {
         return from(this.userService.deleteOne(id));
     }
 
-    @Roles(UserRole.ADMIN)
+    @Roles(UserRole.USER)
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Put(':id/role')
     updateRole(@Param('id') id: string, @Body() user: User): Observable<UpdateResult> {

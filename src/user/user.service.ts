@@ -120,24 +120,24 @@ export class UserService {
                 if (user) {
                     return this.authService.generateJWT(user).pipe(map((jwt: string) => jwt));
                 } else {
-                    throw new NotFoundException('User wasn\'t found');
+                    throw new NotFoundException('Email or password are not correct');
                 }
             }))
         )
     }
 
     validate(email: string, password: string): Observable<User> {
-        return from(this.userRepository.findOne({ email })).pipe(
+        return from(this.userRepository.findOne(
+            { email },
+            { select: ['password', 'age', 'avatar', 'id', 'email', 'nutrition', 'name', 'role'] }
+        )).pipe(
             switchMap((user: User) => {
                 return this.authService
                     .comparePasswords(password, user.password)
-                    .pipe(map((match: boolean) => {
-                        if (match) {
-                            return user;
-                        } else {
-                            throw new BadRequestException('Password is not correct');
-                        }
-                    }))
+                    .pipe(
+                        map((match: boolean) => match && user),
+                        catchError(error => throwError(error))
+                    )
             })
         )
     }
