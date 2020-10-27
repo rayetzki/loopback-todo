@@ -3,12 +3,12 @@ import { ConfigModule } from '@nestjs/config';
 import { HelmetMiddleware } from '@nest-middlewares/helmet';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CorsMiddleware } from '@nest-middlewares/cors';
-import { CsurfMiddleware } from '@nest-middlewares/csurf';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { RecipeEntity } from './recipes/recipes.entity';
+import { LoggerMiddleware } from './app.logger';
 
 @Module({
   imports: [
@@ -32,8 +32,8 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     HelmetMiddleware.configure({ xssFilter: true });
     CorsMiddleware.configure({ origin: [process.env.LOCALHOST_URL] });
-    consumer.apply(HelmetMiddleware);
-    consumer.apply(CorsMiddleware);
-    consumer.apply(CsurfMiddleware);
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+    consumer.apply(HelmetMiddleware).forRoutes('*');
+    consumer.apply(CorsMiddleware).forRoutes('*');
   }
 }
