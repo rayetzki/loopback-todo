@@ -20,7 +20,7 @@ export class AuthService {
     comparePasswords(newPassword: string, passwordHash: string): Observable<boolean | unknown> {
         return from(compare(newPassword, passwordHash)).pipe(
             map((same: boolean) => same),
-            catchError((error: Error) => of({ error: error.message }))
+            catchError(error => of({ error: error.message }))
         );
     }
 }

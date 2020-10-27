@@ -86,21 +86,15 @@ export class UserService {
         )
     }
 
-    updateAvatar(id: string, avatar: string): Observable<void> {
+    updateAvatar(id: string, avatar: string): Observable<UpdateResult> {
         return from(this.userRepository.findOne(id)).pipe(
-            map((user: User) => {
+            switchMap((user: User) => {
                 if (user.avatar) {
-                    from(this.cloudinaryService.updateAvatar(user.avatar, avatar)).pipe(
-                        map((uploadResponse: UploadApiResponse) => {
-                            from(this.userRepository.update(id, { avatar: uploadResponse.secure_url })).pipe(
-                                map((updateResult: UpdateResult) => {
-                                    if (updateResult) {
-                                        from(this.userRepository.findOne(id)).pipe(
-                                            map((user: User) => user),
-                                            catchError(error => throwError(error))
-                                        )
-                                    }
-                                })
+                    return from(this.cloudinaryService.updateAvatar(user.avatar, avatar)).pipe(
+                        switchMap((uploadResponse: UploadApiResponse) => {
+                            return from(this.userRepository.update(id, { avatar: uploadResponse.secure_url })).pipe(
+                                map((updateResult: UpdateResult) => updateResult),
+                                catchError(error => throwError(error))
                             )
                         })
                     );
