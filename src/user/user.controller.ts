@@ -18,13 +18,13 @@ export class UserController {
     @Get()
     findAll(
         @Query('limit') limit = 0,
-        @Query('offset') offset = 0,
+        @Query('page') page = 0,
         @Query('id') id: string
     ): Observable<PaginatedUsers | User> {
         if (id) {
             return from(this.userService.findOne(id));
         } else {
-            return from(this.userService.findAll(limit, offset));
+            return from(this.userService.findAll(limit, page));
         }
     }
 

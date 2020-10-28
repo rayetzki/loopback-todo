@@ -16,7 +16,7 @@ export interface PaginatedUsers {
     users: User[]
     totalItems: number
     itemCount: number
-    currentPage: number
+    page: number
     itemsPerPage: number
 };
 

@@ -31,16 +31,16 @@ export class UserService {
             }))
     }
 
-    findAll(limit: number, offset: number): Observable<PaginatedUsers> {
+    findAll(limit: number, page: number): Observable<PaginatedUsers> {
         return from(this.userRepository
-            .findAndCount({ skip: offset, take: limit }))
+            .findAndCount({ skip: page, take: limit }))
             .pipe(map(([users, count]) => {
                 return {
                     users,
                     totalItems: count,
                     itemCount: limit || users.length,
-                    currentPage: offset,
-                    itemsPerPage: offset ? offset * limit : count
+                    page,
+                    itemsPerPage: page !== 0 ? page * limit : count
                 };
             }), catchError(error => throwError(error)));
     }
