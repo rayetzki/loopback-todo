@@ -1,14 +1,35 @@
+import { ApiProperty } from "@nestjs/swagger";
 import { Recipe } from "../recipes/recipes.interface";
 
-export interface User {
+export enum UserRole {
+    ADMIN = 'admin',
+    EDITOR = 'editor',
+    USER = 'user'
+};
+
+export class User {
     id?: string
+
+    @ApiProperty()
     name?: string
+
+    @ApiProperty()
     age?: number
+
+    @ApiProperty()
     email?: string
+
+    @ApiProperty()
     nutrition?: string
+
+    @ApiProperty()
     password?: string
-    role?: UserRole
+
+    @ApiProperty()
     avatar?: string
+
+    @ApiProperty({ enum: [UserRole.EDITOR, UserRole.USER] })
+    role?: UserRole
     recipes?: Recipe[]
 }
 
@@ -18,10 +39,4 @@ export interface PaginatedUsers {
     itemCount: number
     page: number
     itemsPerPage: number
-};
-
-export enum UserRole {
-    ADMIN = 'admin',
-    EDITOR = 'editor',
-    USER = 'user'
-};
+}

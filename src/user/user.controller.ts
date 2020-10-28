@@ -8,7 +8,7 @@ import { JwtToken } from '../auth/auth.interface';
 import { Roles } from '../auth/auth.decorator';
 import { RolesGuard } from '../auth/role.guard';
 import { IsUserGuard, JwtAuthGuard } from '../auth/auth.guard';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('users')
 @Controller('users')
@@ -45,6 +45,7 @@ export class UserController {
         );
     }
 
+    @ApiBody({ type: User })
     @Post('/login')
     login(@Body() user: User): Observable<JwtToken | unknown> {
         return this.userService.login(user.email, user.password).pipe(

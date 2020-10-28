@@ -5,13 +5,16 @@ import { Recipe } from "./recipes.interface";
 import { IsUserGuard, JwtAuthGuard } from "../auth/auth.guard";
 import { DeleteResult } from "typeorm";
 import { AuthorGuard } from "./author.guard";
-import { ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiQuery, ApiTags } from "@nestjs/swagger";
 
 @ApiTags('recipes')
+@ApiBearerAuth()
 @Controller('recipes')
 export class RecipesController {
     constructor(private readonly recipesService: RecipesService) { }
 
+    @ApiQuery({ name: 'id', type: 'string', required: false })
+    @ApiQuery({ name: 'userId', type: 'string', required: false })
     @UseGuards(JwtAuthGuard)
     @Get()
     find(
