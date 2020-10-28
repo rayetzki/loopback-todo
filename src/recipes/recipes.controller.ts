@@ -1,9 +1,8 @@
-import { Body, Controller, Get, Post, Query, Request, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Post, Query, UseGuards } from "@nestjs/common";
 import { from, Observable } from "rxjs";
 import { RecipesService } from "./recipes.service";
 import { Recipe } from "./recipes.interface";
 import { IsUserGuard, JwtAuthGuard } from "../auth/auth.guard";
-import { User } from "src/user/user.interface";
 
 @Controller('recipes')
 export class RecipesController {
@@ -11,20 +10,22 @@ export class RecipesController {
 
     @UseGuards(JwtAuthGuard)
     @Get()
-    find(@Query() query: { id?: string, userId?: string }): Observable<Recipe[] | Recipe> {
-        if (query?.id) {
-            return from(this.recipesService.findOne(query.id));
-        } else if (query?.userId) {
-            return from(this.recipesService.findByUser(query.userId));
+    find(
+        @Query('id') id?: string,
+        @Query('userId') userId?: string
+    ): Observable<Recipe[] | Recipe> {
+        if (id) {
+            return from(this.recipesService.findOne(id));
+        } else if (userId) {
+            return from(this.recipesService.findByUser(userId));
         } else {
             return from(this.recipesService.findAll());
-        }
+        };
     }
 
     @UseGuards(JwtAuthGuard, IsUserGuard)
     @Post()
-    create(@Body() recipe: Recipe, @Request() request): Observable<Recipe> {
-        const user: User = request.user;
-        return from(this.recipesService.create(user, recipe));
+    create(@Body() recipe: Recipe): Observable<Recipe> {
+        return from(this.recipesService.create(recipe));
     }
 }

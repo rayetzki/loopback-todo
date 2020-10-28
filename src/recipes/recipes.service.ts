@@ -1,5 +1,7 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable, Scope } from "@nestjs/common";
+import { REQUEST } from "@nestjs/core";
 import { InjectRepository } from "@nestjs/typeorm";
+import { Request } from "express";
 import { from, Observable, of, throwError } from "rxjs";
 import { catchError, map, switchMap } from "rxjs/operators";
 import slugify from "slugify";
@@ -8,10 +10,11 @@ import { User } from "../user/user.interface";
 import { RecipeEntity } from "./recipes.entity";
 import { Recipe } from "./recipes.interface";
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class RecipesService {
     constructor(
-        @InjectRepository(RecipeEntity) private readonly recipesRepository: Repository<RecipeEntity>
+        @InjectRepository(RecipeEntity) private readonly recipesRepository: Repository<RecipeEntity>,
+        @Inject(REQUEST) private readonly request: Request
     ) { }
 
     findAll(): Observable<Recipe[]> {
@@ -32,7 +35,8 @@ export class RecipesService {
         )
     }
 
-    create(user: User, recipe: Recipe): Observable<Recipe> {
+    create(recipe: Recipe): Observable<Recipe> {
+        const user: User = this.request.user;
         return from(this.generateSlug(recipe.title)).pipe(
             switchMap((slug: string) => {
                 return from(this.recipesRepository.save({ ...recipe, slug, author: user }));
