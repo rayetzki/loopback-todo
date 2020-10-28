@@ -5,7 +5,9 @@ import { Recipe } from "./recipes.interface";
 import { IsUserGuard, JwtAuthGuard } from "../auth/auth.guard";
 import { DeleteResult } from "typeorm";
 import { AuthorGuard } from "./author.guard";
+import { ApiTags } from "@nestjs/swagger";
 
+@ApiTags('recipes')
 @Controller('recipes')
 export class RecipesController {
     constructor(private readonly recipesService: RecipesService) { }
