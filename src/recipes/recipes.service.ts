@@ -1,11 +1,11 @@
 import { Inject, Injectable, Scope } from "@nestjs/common";
-import { REQUEST } from "@nestjs/core";
+import slugify from "slugify";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Request } from "express";
+import { REQUEST } from "@nestjs/core";
+import { DeleteResult, Repository, UpdateResult } from "typeorm";
 import { from, Observable, of, throwError } from "rxjs";
 import { catchError, map, switchMap } from "rxjs/operators";
-import slugify from "slugify";
-import { Repository } from "typeorm";
 import { User } from "../user/user.interface";
 import { RecipeEntity } from "./recipes.entity";
 import { Recipe } from "./recipes.interface";
@@ -43,6 +43,27 @@ export class RecipesService {
             }),
             catchError(error => throwError(error))
         );
+    }
+
+    update(id: string, recipe: Recipe): Observable<Recipe> {
+        return from(this.recipesRepository.update(id, recipe)).pipe(
+            switchMap((updateResult: UpdateResult) => {
+                if (updateResult.affected === 1) {
+                    return from(this.recipesRepository.findOne(id)).pipe(
+                        map((recipe: Recipe) => recipe),
+                        catchError(error => throwError(error))
+                    )
+                }
+            }),
+            catchError(error => throwError(error))
+        )
+    }
+
+    delete(id: string): Observable<DeleteResult> {
+        return from(this.recipesRepository.delete(id)).pipe(
+            map((deleteResult: DeleteResult) => deleteResult),
+            catchError(error => throwError(error))
+        )
     }
 
     generateSlug(title: string): Observable<string> {

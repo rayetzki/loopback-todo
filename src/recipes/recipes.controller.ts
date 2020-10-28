@@ -1,8 +1,10 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from "@nestjs/common";
 import { from, Observable } from "rxjs";
 import { RecipesService } from "./recipes.service";
 import { Recipe } from "./recipes.interface";
 import { IsUserGuard, JwtAuthGuard } from "../auth/auth.guard";
+import { DeleteResult } from "typeorm";
+import { AuthorGuard } from "./author.guard";
 
 @Controller('recipes')
 export class RecipesController {
@@ -27,5 +29,17 @@ export class RecipesController {
     @Post()
     create(@Body() recipe: Recipe): Observable<Recipe> {
         return from(this.recipesService.create(recipe));
+    }
+
+    @UseGuards(JwtAuthGuard, IsUserGuard, AuthorGuard)
+    @Put(':id')
+    update(@Param('id') id: string, @Body() recipe: Recipe): Observable<Recipe> {
+        return from(this.recipesService.update(id, recipe));
+    }
+
+    @UseGuards(JwtAuthGuard, IsUserGuard, AuthorGuard)
+    @Delete(':id')
+    delete(@Param('id') id: string): Observable<DeleteResult> {
+        return from(this.recipesService.delete(id));
     }
 }

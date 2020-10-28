@@ -56,8 +56,17 @@ export class UserService {
         );
     }
 
-    updateOne(id: string, user: User): Observable<UpdateResult> {
-        return from(this.userRepository.update(id, user))
+    updateOne(id: string, user: User): Observable<User> {
+        return from(this.userRepository.update(id, user)).pipe(
+            switchMap((updateResult: UpdateResult) => {
+                if (updateResult.affected === 1) {
+                    return from(this.userRepository.findOne(id)).pipe(
+                        map((user: User) => user),
+                        catchError(error => throwError(error))
+                    )
+                }
+            })
+        )
     }
 
     updateRole(id: string, user: User): Observable<UpdateResult> {
@@ -73,11 +82,7 @@ export class UserService {
             map((uploadResponse: UploadApiResponse) => {
                 if (uploadResponse.created_at) {
                     this.updateOne(id, { avatar: uploadResponse.secure_url }).pipe(
-                        map((updateResult: UpdateResult) => {
-                            if (updateResult) {
-                                this.findOne(id).pipe(map((user: User) => user))
-                            };
-                        }),
+                        map((user: User) => user),
                         catchError(error => throwError(error))
                     )
                 } else return new BadRequestException("Sorry, couldnt add an avatar")

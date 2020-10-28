@@ -63,7 +63,7 @@ export class UserController {
 
     @UseGuards(JwtAuthGuard, IsUserGuard)
     @Put(':id')
-    update(@Param('id') id: string, @Body() user: User): Observable<UpdateResult> {
+    update(@Param('id') id: string, @Body() user: User): Observable<User> {
         return from(this.userService.updateOne(id, user));
     }
 
