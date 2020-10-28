@@ -27,7 +27,7 @@ export class RecipeEntity {
     @Column({ type: "varchar" })
     description: string;
 
-    @Column({ type: "simple-array" })
+    @Column('jsonb')
     ingredients: RecipeIngredients[];
 
     @Column()

@@ -18,7 +18,7 @@ import { LoggerMiddleware } from './app.logger';
       url: process.env.DATABASE_URL,
       autoLoadEntities: true,
       synchronize: true,
-      logger: "advanced-console",
+      logging: true,
       entities: [__dirname.concat('/../**/*.entity.js')]
     }),
     UserModule,
