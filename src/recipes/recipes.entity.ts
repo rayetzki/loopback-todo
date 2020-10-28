@@ -8,7 +8,7 @@ export class RecipeEntity {
     id: string;
 
     @Column({ unique: true })
-    name: string;
+    title: string;
 
     @Column()
     slug: string;

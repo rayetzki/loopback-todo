@@ -1,11 +1,9 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuthModule } from "src/auth/auth.module";
-import { AuthService } from "src/auth/auth.service";
 import { UserModule } from "src/user/user.module";
-import { UserService } from "src/user/user.service";
-import { RecipesController } from "./recipe.controller";
-import { RecipesService } from "./recipe.service";
+import { RecipesController } from "./recipes.controller";
+import { RecipesService } from "./recipes.service";
 import { RecipeEntity } from "./recipes.entity";
 
 @Module({
@@ -14,7 +12,7 @@ import { RecipeEntity } from "./recipes.entity";
         UserModule,
         AuthModule
     ],
-    providers: [UserService, AuthService],
+    providers: [RecipesService],
     controllers: [RecipesController],
     exports: [RecipesService]
 })

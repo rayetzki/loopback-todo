@@ -21,7 +21,7 @@ export class IsUserGuard implements CanActivate {
         const user: User = request.user;
 
         return from(this.userService.findOne(user.id)).pipe(
-            map((user: User) => (user.id === request.params.id) ? true : false),
+            map((foundUser: User) => (foundUser.id === user.id) ? true : false),
             catchError(error => throwError(error))
         )
     }

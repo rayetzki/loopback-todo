@@ -7,7 +7,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
-import { RecipeEntity } from './recipes/recipes.entity';
+import { RecipeModule } from './recipes/recipes.module';
 import { LoggerMiddleware } from './app.logger';
 
 @Module({
@@ -23,7 +23,7 @@ import { LoggerMiddleware } from './app.logger';
     }),
     UserModule,
     AuthModule,
-    RecipeEntity
+    RecipeModule
   ],
   controllers: [AppController],
   providers: [AppService]

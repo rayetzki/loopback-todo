@@ -34,6 +34,7 @@ export class UserController {
         return from(this.userService.search(name));
     }
 
+    //TODO check user by name and email if exists
     @Post()
     create(@Body() user: User): Observable<User | unknown> {
         return from(this.userService.create(user)).pipe(
