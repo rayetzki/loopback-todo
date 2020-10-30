@@ -1,6 +1,8 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { UserRole } from "./user.interface";
 import { RecipeEntity } from "../recipes/recipes.entity";
+import { NutritionType } from "src/recipes/recipes.interface";
+import { IsEnum } from "class-validator";
 
 @Entity("users")
 export class UserEntity {
@@ -11,7 +13,8 @@ export class UserEntity {
     name: string;
 
     @Column()
-    nutrition: string;
+    @IsEnum(NutritionType)
+    nutrition: NutritionType
 
     @Column()
     age: number;

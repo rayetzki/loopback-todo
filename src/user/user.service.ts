@@ -7,7 +7,7 @@ import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { AuthService } from '../auth/auth.service';
 import { UserEntity } from './user.entity';
-import { PaginatedUsers, User } from './user.interface';
+import { PaginatedUsers, User, UserRole } from './user.interface';
 
 @Injectable()
 export class UserService {
@@ -69,8 +69,8 @@ export class UserService {
         )
     }
 
-    updateRole(id: string, user: User): Observable<UpdateResult> {
-        return from(this.userRepository.update(id, user));
+    updateRole(id: string, role: UserRole): Observable<UpdateResult> {
+        return from(this.userRepository.update(id, { role }));
     }
 
     deleteOne(id: string): Observable<DeleteResult> {

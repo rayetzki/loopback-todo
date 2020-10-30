@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { IsArray, IsEnum, IsString } from "class-validator";
 import { User } from "src/user/user.interface";
 
 export enum NutritionType {
@@ -14,29 +15,52 @@ export class Recipe {
     createdAt: Date
     updatedAt: Date
     slug: string
-
-    @ApiProperty({ type: "string" })
-    title: string
     author: User
 
-    @ApiProperty({ type: "string" })
+    @ApiProperty()
+    @IsString()
+    title: string
+
+    @ApiProperty()
+    @IsString()
     description: string
 
-    @ApiProperty({ type: "string" })
+    @ApiProperty()
+    @IsString()
     body: string
 
     @ApiProperty({
-        type: 'array'
+        type: 'array',
+        items: {
+            type: 'object',
+            properties: {
+                unit: { type: 'string' },
+                ingredient: { type: 'string' }
+            }
+        }
     })
+    @IsArray()
     ingredients: Array<RecipeIngredients>
 
-    @ApiProperty({ type: "string" })
+    @ApiProperty()
+    @IsString()
     cost: string
 
-    @ApiProperty({ type: "string" })
+    @ApiProperty()
+    @IsString()
     cookingTime: string
 
-    @ApiProperty({ enum: [NutritionType.ANY, NutritionType.LACTOVEGETARIAN, NutritionType.RAW, NutritionType.VEGAN, NutritionType.VEGETARIAN] })
+    @ApiProperty({
+        default: NutritionType.ANY,
+        enum: [
+            NutritionType.ANY,
+            NutritionType.LACTOVEGETARIAN,
+            NutritionType.RAW,
+            NutritionType.VEGAN,
+            NutritionType.VEGETARIAN
+        ]
+    })
+    @IsEnum(NutritionType)
     nutritionType: NutritionType
 }
 

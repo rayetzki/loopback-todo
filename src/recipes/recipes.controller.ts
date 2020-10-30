@@ -5,7 +5,7 @@ import { Recipe } from "./recipes.interface";
 import { IsUserGuard, JwtAuthGuard } from "../auth/auth.guard";
 import { DeleteResult } from "typeorm";
 import { AuthorGuard } from "./author.guard";
-import { ApiBearerAuth, ApiQuery, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiBody, ApiParam, ApiQuery, ApiTags } from "@nestjs/swagger";
 
 @ApiTags('recipes')
 @ApiBearerAuth()
@@ -30,18 +30,21 @@ export class RecipesController {
         };
     }
 
+    @ApiBody({ type: () => Recipe })
     @UseGuards(JwtAuthGuard, IsUserGuard)
     @Post()
     create(@Body() recipe: Recipe): Observable<Recipe> {
         return from(this.recipesService.create(recipe));
     }
 
+    @ApiParam({ name: 'id', type: 'string', required: true })
     @UseGuards(JwtAuthGuard, IsUserGuard, AuthorGuard)
     @Put(':id')
     update(@Param('id') id: string, @Body() recipe: Recipe): Observable<Recipe> {
         return from(this.recipesService.update(id, recipe));
     }
 
+    @ApiParam({ name: 'id', type: 'string', required: true })
     @UseGuards(JwtAuthGuard, IsUserGuard, AuthorGuard)
     @Delete(':id')
     delete(@Param('id') id: string): Observable<DeleteResult> {
