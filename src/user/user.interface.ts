@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsEnum, IsInt, IsString } from "class-validator";
+import { IsEmail, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { NutritionType, Recipe } from "../recipes/recipes.interface";
 
 export enum UserRole {
@@ -13,14 +13,17 @@ export class User {
 
     @ApiProperty()
     @IsString()
+    @IsNotEmpty()
     name?: string
 
     @ApiProperty()
     @IsInt()
+    @IsNotEmpty()
     age?: number
 
     @ApiProperty()
     @IsEmail()
+    @IsNotEmpty()
     email?: string
 
     @ApiProperty({
@@ -34,18 +37,22 @@ export class User {
         ],
     })
     @IsEnum(NutritionType)
+    @IsNotEmpty()
     nutrition?: NutritionType
 
     @ApiProperty()
     @IsString()
+    @IsNotEmpty()
     password?: string
 
     @ApiProperty()
     @IsString()
+    @IsOptional()
     avatar?: string
 
     @ApiProperty({ enum: [UserRole.EDITOR, UserRole.USER], default: UserRole.USER })
     @IsEnum(UserRole)
+    @IsNotEmpty()
     role?: UserRole
 
     recipes?: Recipe[]
@@ -59,6 +66,16 @@ export interface PaginatedUsers {
     itemsPerPage: number
 }
 
+export class UserCredentials {
+    @ApiProperty()
+    @IsEmail()
+    @IsNotEmpty()
+    email: string
+
+    @ApiProperty()
+    @IsNotEmpty()
+    password: string
+}
 
 export class UserAvatar {
     @ApiProperty()

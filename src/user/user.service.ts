@@ -2,12 +2,12 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { UploadApiErrorResponse, UploadApiResponse } from 'cloudinary';
 import { from, Observable, throwError } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
-import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+import { catchError, map, switchMap } from 'rxjs/operators';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { PaginatedUsers, User, UserRole } from './user.interface';
 import { AuthService } from '../auth/auth.service';
 import { UserEntity } from './user.entity';
-import { PaginatedUsers, User, UserRole } from './user.interface';
 
 @Injectable()
 export class UserService {
@@ -18,23 +18,32 @@ export class UserService {
     ) { }
 
     create(user: User): Observable<User> {
-        return this.authService
-            .hashPassword(user.password)
-            .pipe(switchMap((passwordHash: string) => {
-                return from(this.userRepository.save({
-                    ...user,
-                    password: passwordHash
-                })).pipe(
-                    map((user: User) => user),
-                    catchError(error => throwError(error))
-                )
-            }))
+        return from(
+            this.userRepository.findOneOrFail({ email: user.email })
+        ).pipe(
+            switchMap((foundUser: User) => {
+                if (foundUser.name === user.name || foundUser.email === user.email) {
+                    throw new BadRequestException("User with such email or name already exist")
+                } else {
+                    return this.authService
+                        .hashPassword(user.password)
+                        .pipe(switchMap((passwordHash: string) => {
+                            return from(this.userRepository.save({
+                                ...user,
+                                password: passwordHash
+                            })).pipe(
+                                map((user: User) => user),
+                                catchError(error => throwError(error))
+                            )
+                        }))
+                }
+            })
+        )
     }
 
     findAll(limit: number, page: number): Observable<PaginatedUsers> {
-        return from(this.userRepository
-            .findAndCount({ skip: page, take: limit }))
-            .pipe(map(([users, count]) => {
+        return from(this.userRepository.findAndCount({ skip: page, take: limit })).pipe(
+            map(([users, count]) => {
                 return {
                     users,
                     totalItems: count,
@@ -42,7 +51,9 @@ export class UserService {
                     page,
                     itemsPerPage: page !== 0 ? page * limit : count
                 };
-            }), catchError(error => throwError(error)));
+            }),
+            catchError(error => throwError(error))
+        );
     }
 
     findOne(id: string): Observable<User> {
@@ -66,7 +77,7 @@ export class UserService {
                     )
                 }
             })
-        )
+        );
     }
 
     updateRole(id: string, role: UserRole): Observable<UpdateResult> {
@@ -88,7 +99,7 @@ export class UserService {
                 } else return new BadRequestException("Sorry, couldnt add an avatar")
             }),
             catchError((error: UploadApiErrorResponse) => throwError(error))
-        )
+        );
     }
 
     updateAvatar(id: string, avatar: string): Observable<UpdateResult> {
@@ -115,14 +126,16 @@ export class UserService {
 
     login(email: string, password: string): Observable<string> {
         return from(
-            this.validate(email, password).pipe(switchMap((user: User) => {
-                if (user) {
-                    return this.authService.generateJWT(user).pipe(map((jwt: string) => jwt));
-                } else {
-                    throw new NotFoundException('Email or password are not correct');
-                }
-            }))
-        )
+            this.validate(email, password).pipe(
+                switchMap((user: User) => {
+                    if (user) {
+                        return this.authService.generateJWT(user).pipe(map((jwt: string) => jwt));
+                    } else {
+                        throw new NotFoundException('Email or password are not correct');
+                    }
+                })
+            )
+        );
     }
 
     validate(email: string, password: string): Observable<User> {
@@ -130,14 +143,12 @@ export class UserService {
             { email },
             { select: ['password', 'age', 'avatar', 'id', 'email', 'nutrition', 'name', 'role'] }
         )).pipe(
-            switchMap((user: User) => {
-                return this.authService
-                    .comparePasswords(password, user.password)
-                    .pipe(
-                        map((match: boolean) => match && user),
-                        catchError(error => throwError(error))
-                    )
-            })
-        )
+            switchMap((user: User) =>
+                this.authService.comparePasswords(password, user.password).pipe(
+                    map((match: boolean) => match && user),
+                    catchError(error => throwError(error))
+                )
+            )
+        );
     }
 }

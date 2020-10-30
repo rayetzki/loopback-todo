@@ -1,9 +1,9 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, ParseUUIDPipe, Post, Put, Query, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiBody, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { from, Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { DeleteResult, UpdateResult } from 'typeorm';
-import { PaginatedUsers, User, UserRole, UserAvatar } from './user.interface';
+import { PaginatedUsers, User, UserRole, UserAvatar, UserCredentials } from './user.interface';
 import { UserService } from './user.service';
 import { JwtToken } from '../auth/auth.interface';
 import { Roles } from '../auth/auth.decorator';
@@ -22,9 +22,9 @@ export class UserController {
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Get()
     findAll(
-        @Query('limit') limit = 0,
-        @Query('page') page = 0,
-        @Query('id') id: string
+        @Query('limit', ParseIntPipe) limit = 0,
+        @Query('page', ParseIntPipe) page = 0,
+        @Query('id', ParseUUIDPipe) id: string
     ): Observable<PaginatedUsers | User> {
         if (id) {
             return from(this.userService.findOne(id));
@@ -41,17 +41,18 @@ export class UserController {
     }
 
     @Post()
-    create(@Body() user: User): Observable<User | unknown> {
+    @UsePipes(ValidationPipe)
+    create(@Body() user: User): Observable<User> {
         return from(this.userService.create(user)).pipe(
-            map((user: User) => user),
-            catchError(error => of({ error: error.message }))
+            map((user: User) => user)
         );
     }
 
-    @ApiBody({ type: () => User })
+    @ApiBody({ type: () => UserCredentials })
     @Post('/login')
-    login(@Body() user: User): Observable<JwtToken | unknown> {
-        return this.userService.login(user.email, user.password).pipe(
+    @UsePipes(ValidationPipe)
+    login(@Body() userCredendtials: UserCredentials): Observable<JwtToken | unknown> {
+        return this.userService.login(userCredendtials.email, userCredendtials.password).pipe(
             map((jwt: string): JwtToken => ({ accessToken: jwt })),
             catchError(error => of({ error: error.message }))
         );
@@ -63,7 +64,7 @@ export class UserController {
     @UseGuards(JwtAuthGuard, IsUserGuard)
     @Put('/avatar')
     updateAvatar(
-        @Query('id') id: string,
+        @Query('id', ParseUUIDPipe) id: string,
         @Body('avatar') avatar: string
     ) {
         return from(this.userService.updateAvatar(id, avatar));
@@ -71,7 +72,7 @@ export class UserController {
 
     @UseGuards(JwtAuthGuard, IsUserGuard)
     @Put(':id')
-    update(@Param('id') id: string, @Body() user: User): Observable<User> {
+    update(@Param('id', ParseUUIDPipe) id: string, @Body() user: User): Observable<User> {
         return from(this.userService.updateOne(id, user));
     }
 
@@ -81,7 +82,7 @@ export class UserController {
     @UseGuards(JwtAuthGuard)
     @Post('/avatar')
     uploadAvatar(
-        @Query('id') id: string,
+        @Query('id', ParseUUIDPipe) id: string,
         @Body('avatar') avatar: string
     ): Observable<User> {
         return from(this.userService.uploadAvatar(id, avatar));
@@ -91,7 +92,7 @@ export class UserController {
     @Roles(UserRole.ADMIN)
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Delete(':id')
-    delete(@Param('id') id: string): Observable<DeleteResult> {
+    delete(@Param('id', ParseUUIDPipe) id: string): Observable<DeleteResult> {
         return from(this.userService.deleteOne(id));
     }
 
@@ -100,7 +101,7 @@ export class UserController {
     @Roles(UserRole.USER)
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Put(':id/role')
-    updateRole(@Param('id') id: string, @Query() role: UserRole): Observable<UpdateResult> {
+    updateRole(@Param('id', ParseUUIDPipe) id: string, @Query() role: UserRole): Observable<UpdateResult> {
         return from(this.userService.updateRole(id, role))
     }
 }

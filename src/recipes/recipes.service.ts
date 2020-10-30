@@ -1,4 +1,4 @@
-import { Inject, Injectable, Scope } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, Scope } from "@nestjs/common";
 import slugify from "slugify";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Request } from "express";
@@ -37,11 +37,20 @@ export class RecipesService {
 
     create(recipe: Recipe): Observable<Recipe> {
         const user: User = this.request.user;
-        return from(this.generateSlug(recipe.title)).pipe(
-            switchMap((slug: string) => {
-                return from(this.recipesRepository.save({ ...recipe, slug, author: user }));
-            }),
-            catchError(error => throwError(error))
+
+        return from(this.recipesRepository.findOne({ title: recipe.title })).pipe(
+            switchMap((foundRecipe: Recipe) => {
+                if (foundRecipe.title === recipe.title) {
+                    throw new BadRequestException('Recipe with such name already exist');
+                } else {
+                    return from(this.generateSlug(recipe.title)).pipe(
+                        switchMap((slug: string) => {
+                            return from(this.recipesRepository.save({ ...recipe, slug, author: user }));
+                        }),
+                        catchError(error => throwError(error))
+                    );
+                }
+            })
         );
     }
 

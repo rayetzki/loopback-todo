@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Put, Query, UseGuards, UsePipes, ValidationPipe } from "@nestjs/common";
 import { from, Observable } from "rxjs";
 import { RecipesService } from "./recipes.service";
 import { Recipe } from "./recipes.interface";
@@ -33,6 +33,7 @@ export class RecipesController {
     @ApiBody({ type: () => Recipe })
     @UseGuards(JwtAuthGuard, IsUserGuard)
     @Post()
+    @UsePipes(ValidationPipe)
     create(@Body() recipe: Recipe): Observable<Recipe> {
         return from(this.recipesService.create(recipe));
     }
@@ -40,14 +41,14 @@ export class RecipesController {
     @ApiParam({ name: 'id', type: 'string', required: true })
     @UseGuards(JwtAuthGuard, IsUserGuard, AuthorGuard)
     @Put(':id')
-    update(@Param('id') id: string, @Body() recipe: Recipe): Observable<Recipe> {
+    update(@Param('id', ParseUUIDPipe) id: string, @Body() recipe: Recipe): Observable<Recipe> {
         return from(this.recipesService.update(id, recipe));
     }
 
     @ApiParam({ name: 'id', type: 'string', required: true })
     @UseGuards(JwtAuthGuard, IsUserGuard, AuthorGuard)
     @Delete(':id')
-    delete(@Param('id') id: string): Observable<DeleteResult> {
+    delete(@Param('id', ParseUUIDPipe) id: string): Observable<DeleteResult> {
         return from(this.recipesService.delete(id));
     }
 }

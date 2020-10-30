@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsArray, IsEnum, IsString } from "class-validator";
+import { IsArray, IsEnum, IsNotEmpty, IsString } from "class-validator";
 import { User } from "src/user/user.interface";
 
 export enum NutritionType {
@@ -19,14 +19,17 @@ export class Recipe {
 
     @ApiProperty()
     @IsString()
+    @IsNotEmpty()
     title: string
 
     @ApiProperty()
     @IsString()
+    @IsNotEmpty()
     description: string
 
     @ApiProperty()
     @IsString()
+    @IsNotEmpty()
     body: string
 
     @ApiProperty({
@@ -40,14 +43,17 @@ export class Recipe {
         }
     })
     @IsArray()
+    @IsNotEmpty()
     ingredients: Array<RecipeIngredients>
 
     @ApiProperty()
     @IsString()
+    @IsNotEmpty()
     cost: string
 
     @ApiProperty()
     @IsString()
+    @IsNotEmpty()
     cookingTime: string
 
     @ApiProperty({
@@ -61,6 +67,7 @@ export class Recipe {
         ]
     })
     @IsEnum(NutritionType)
+    @IsNotEmpty()
     nutritionType: NutritionType
 }
 
