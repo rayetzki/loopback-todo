@@ -3,8 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { HelmetMiddleware } from '@nest-middlewares/helmet';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CorsMiddleware } from '@nest-middlewares/cors';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { RecipeModule } from './recipes/recipes.module';
@@ -25,8 +23,8 @@ import { LoggerMiddleware } from './app.logger';
     AuthModule,
     RecipeModule
   ],
-  controllers: [AppController],
-  providers: [AppService]
+  controllers: [],
+  providers: []
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
