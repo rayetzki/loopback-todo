@@ -46,10 +46,9 @@ export class UserService {
             map(([users, count]) => {
                 return {
                     users,
-                    totalItems: count,
-                    itemCount: limit || users.length,
+                    total: count,
                     page,
-                    itemsPerPage: page !== 0 ? page * limit : count
+                    perPage: page !== 0 ? page * limit : count
                 };
             }),
             catchError(error => throwError(error))
@@ -102,14 +101,21 @@ export class UserService {
         );
     }
 
-    updateAvatar(id: string, avatar: string): Observable<UpdateResult> {
-        return from(this.userRepository.findOne(id)).pipe(
+    updateAvatar(id: string, avatar: string): Observable<User> {
+        return from(this.userRepository.findOne(id, { select: ['avatar'] })).pipe(
             switchMap((user: User) => {
-                if (user.avatar) {
+                if (user.avatar.length !== 0) {
                     return from(this.cloudinaryService.updateAvatar(user.avatar, avatar)).pipe(
                         switchMap((uploadResponse: UploadApiResponse) => {
                             return from(this.userRepository.update(id, { avatar: uploadResponse.secure_url })).pipe(
-                                map((updateResult: UpdateResult) => updateResult),
+                                switchMap((updateResult: UpdateResult) => {
+                                    if (updateResult.affected === 1) {
+                                        return from(this.userRepository.findOne(id)).pipe(
+                                            map((user: User) => user),
+                                            catchError(error => throwError(error))
+                                        )
+                                    }
+                                }),
                                 catchError(error => throwError(error))
                             )
                         })
@@ -120,7 +126,8 @@ export class UserService {
                         catchError(error => throwError(error))
                     );
                 }
-            })
+            }),
+            catchError(error => throwError(error))
         );
     }
 

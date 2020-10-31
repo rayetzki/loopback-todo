@@ -1,10 +1,10 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Put, Query, UseGuards, UsePipes, ValidationPipe } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards, UsePipes, ValidationPipe } from "@nestjs/common";
 import { from, Observable } from "rxjs";
 import { RecipesService } from "./recipes.service";
-import { Recipe } from "./recipes.interface";
+import { PaginatedRecipes, Recipe } from "./recipes.interface";
 import { IsUserGuard, JwtAuthGuard } from "../auth/auth.guard";
 import { DeleteResult } from "typeorm";
-import { AuthorGuard } from "./author.guard";
+import { AuthorGuard } from "./recipes.guard";
 import { ApiBearerAuth, ApiBody, ApiParam, ApiQuery, ApiTags } from "@nestjs/swagger";
 
 @ApiTags('recipes')
@@ -19,14 +19,16 @@ export class RecipesController {
     @Get()
     find(
         @Query('id') id?: string,
-        @Query('userId') userId?: string
-    ): Observable<Recipe[] | Recipe> {
+        @Query('userId') userId?: string,
+        @Query('page') page = 0,
+        @Query('limit') limit = 0
+    ): Observable<PaginatedRecipes | Recipe> {
         if (id) {
             return from(this.recipesService.findOne(id));
         } else if (userId) {
-            return from(this.recipesService.findByUser(userId));
+            return from(this.recipesService.findByUser(userId, limit, page));
         } else {
-            return from(this.recipesService.findAll());
+            return from(this.recipesService.findAll(limit, page));
         };
     }
 
@@ -41,14 +43,14 @@ export class RecipesController {
     @ApiParam({ name: 'id', type: 'string', required: true })
     @UseGuards(JwtAuthGuard, IsUserGuard, AuthorGuard)
     @Put(':id')
-    update(@Param('id', ParseUUIDPipe) id: string, @Body() recipe: Recipe): Observable<Recipe> {
+    update(@Param('id') id: string, @Body() recipe: Recipe): Observable<Recipe> {
         return from(this.recipesService.update(id, recipe));
     }
 
     @ApiParam({ name: 'id', type: 'string', required: true })
     @UseGuards(JwtAuthGuard, IsUserGuard, AuthorGuard)
     @Delete(':id')
-    delete(@Param('id', ParseUUIDPipe) id: string): Observable<DeleteResult> {
+    delete(@Param('id') id: string): Observable<DeleteResult> {
         return from(this.recipesService.delete(id));
     }
 }

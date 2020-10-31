@@ -8,7 +8,7 @@ import { from, Observable, of, throwError } from "rxjs";
 import { catchError, map, switchMap } from "rxjs/operators";
 import { User } from "../user/user.interface";
 import { RecipeEntity } from "./recipes.entity";
-import { Recipe } from "./recipes.interface";
+import { PaginatedRecipes, Recipe } from "./recipes.interface";
 
 @Injectable({ scope: Scope.REQUEST })
 export class RecipesService {
@@ -17,20 +17,41 @@ export class RecipesService {
         @Inject(REQUEST) private readonly request: Request
     ) { }
 
-    findAll(): Observable<Recipe[]> {
-        return from(this.recipesRepository.find({ relations: ['author'] }));
+    findAll(limit: number, page: number): Observable<PaginatedRecipes> {
+        return from(this.recipesRepository.findAndCount({
+            skip: page,
+            take: limit,
+            relations: ['author']
+        })).pipe(
+            map(([recipes, count]) => ({
+                recipes,
+                total: count,
+                page,
+                limit,
+                perPage: page !== 0 ? page * limit : count
+            })),
+            catchError(error => throwError(error))
+        );
     }
 
     findOne(id: string): Observable<Recipe> {
         return from(this.recipesRepository.findOne(id, { relations: ['author'] }));
     }
 
-    findByUser(userId: string): Observable<Recipe[]> {
-        return from(this.recipesRepository.find({
+    findByUser(userId: string, page: number, limit: number): Observable<PaginatedRecipes> {
+        return from(this.recipesRepository.findAndCount({
             where: { author: userId },
+            skip: page,
+            take: limit,
             relations: ['author']
         })).pipe(
-            map((recipes: Recipe[]) => recipes),
+            map(([recipes, count]) => ({
+                recipes,
+                total: count,
+                page,
+                limit,
+                perPage: page !== 0 ? page * limit : count
+            })),
             catchError(error => throwError(error))
         )
     }

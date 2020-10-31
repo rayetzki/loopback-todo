@@ -60,10 +60,9 @@ export class User {
 
 export interface PaginatedUsers {
     users: User[]
-    totalItems: number
-    itemCount: number
     page: number
-    itemsPerPage: number
+    perPage: number
+    total: number
 }
 
 export class UserCredentials {

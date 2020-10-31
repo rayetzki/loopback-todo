@@ -71,6 +71,14 @@ export class Recipe {
     nutritionType: NutritionType
 }
 
+export interface PaginatedRecipes {
+    recipes: Recipe[]
+    page: number
+    limit: number
+    total: number
+    perPage: number
+}
+
 export type RecipeIngredients = {
     ingredient: string
     unit: string

@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, ParseUUIDPipe, Post, Put, Query, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiBody, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { from, Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -22,9 +23,9 @@ export class UserController {
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Get()
     findAll(
-        @Query('limit', ParseIntPipe) limit = 0,
-        @Query('page', ParseIntPipe) page = 0,
-        @Query('id', ParseUUIDPipe) id: string
+        @Query('limit') limit = 0,
+        @Query('page') page = 0,
+        @Query('id') id?: string
     ): Observable<PaginatedUsers | User> {
         if (id) {
             return from(this.userService.findOne(id));
@@ -64,7 +65,7 @@ export class UserController {
     @UseGuards(JwtAuthGuard, IsUserGuard)
     @Put('/avatar')
     updateAvatar(
-        @Query('id', ParseUUIDPipe) id: string,
+        @Query('id') id: string,
         @Body('avatar') avatar: string
     ) {
         return from(this.userService.updateAvatar(id, avatar));
@@ -72,7 +73,7 @@ export class UserController {
 
     @UseGuards(JwtAuthGuard, IsUserGuard)
     @Put(':id')
-    update(@Param('id', ParseUUIDPipe) id: string, @Body() user: User): Observable<User> {
+    update(@Param('id') id: string, @Body() user: User): Observable<User> {
         return from(this.userService.updateOne(id, user));
     }
 
@@ -82,7 +83,7 @@ export class UserController {
     @UseGuards(JwtAuthGuard)
     @Post('/avatar')
     uploadAvatar(
-        @Query('id', ParseUUIDPipe) id: string,
+        @Query('id') id: string,
         @Body('avatar') avatar: string
     ): Observable<User> {
         return from(this.userService.uploadAvatar(id, avatar));
@@ -92,7 +93,7 @@ export class UserController {
     @Roles(UserRole.ADMIN)
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Delete(':id')
-    delete(@Param('id', ParseUUIDPipe) id: string): Observable<DeleteResult> {
+    delete(@Param('id') id: string): Observable<DeleteResult> {
         return from(this.userService.deleteOne(id));
     }
 
@@ -101,7 +102,7 @@ export class UserController {
     @Roles(UserRole.USER)
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Put(':id/role')
-    updateRole(@Param('id', ParseUUIDPipe) id: string, @Query() role: UserRole): Observable<UpdateResult> {
+    updateRole(@Param('id') id: string, @Query() role: UserRole): Observable<UpdateResult> {
         return from(this.userService.updateRole(id, role))
     }
 }
