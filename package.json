@@ -1,6 +1,9 @@
 {
-  "name": "api",
-  "version": "0.0.1",
+  "name": "recipes-api",
+  "version": "1.0.0",
+  "engines": { 
+    "node": "14.15.0" 
+  },
   "description": "<p align=\"center\">   <a href=\"http://nestjs.com/\" target=\"blank\"><img src=\"https://nestjs.com/img/logo_text.svg\" width=\"320\" alt=\"Nest Logo\" /></a> </p>",
   "author": "",
   "private": true,
