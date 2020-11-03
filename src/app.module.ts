@@ -29,7 +29,7 @@ import { LoggerMiddleware } from './app.logger';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     HelmetMiddleware.configure({ xssFilter: true });
-    CorsMiddleware.configure({ origin: [process.env.LOCALHOST_URL] });
+    CorsMiddleware.configure({ origin: [process.env.LOCALHOST_URL, process.env.FRONTEND_URL] });
     consumer.apply(LoggerMiddleware).forRoutes('*');
     consumer.apply(HelmetMiddleware).forRoutes('*');
     consumer.apply(CorsMiddleware).forRoutes('*');
