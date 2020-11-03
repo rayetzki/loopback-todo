@@ -8,13 +8,16 @@ import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { PaginatedUsers, User, UserRole } from './user.interface';
 import { AuthService } from '../auth/auth.service';
 import { UserEntity } from './user.entity';
+import { JwtToken } from 'src/auth/auth.interface';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UserService {
     constructor(
         @InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>,
         private readonly authService: AuthService,
-        private readonly cloudinaryService: CloudinaryService
+        private readonly cloudinaryService: CloudinaryService,
+        private readonly configService: ConfigService
     ) { }
 
     create(user: User): Observable<User> {
@@ -131,12 +134,18 @@ export class UserService {
         );
     }
 
-    login(email: string, password: string): Observable<string> {
+    login(email: string, password: string): Observable<JwtToken | unknown> {
         return from(
             this.validate(email, password).pipe(
                 switchMap((user: User) => {
                     if (user) {
-                        return this.authService.generateJWT(user).pipe(map((jwt: string) => jwt));
+                        return this.authService.generateJWT(user).pipe(
+                            map((jwt: string) => ({
+                                jwt,
+                                expiresIn: this.configService.get('JWT_EXPIRES_IN'),
+                                userId: user.id
+                            }))
+                        );
                     } else {
                         throw new NotFoundException('Email or password are not correct');
                     }

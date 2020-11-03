@@ -1,6 +1,7 @@
 export interface JwtToken {
     accessToken: string
+    expiresIn: string
     refreshToken?: string
-    expiresIn?: string
     refreshExpiresIn?: string
+    userId?: string
 };

@@ -5,14 +5,16 @@ import { UserController } from './user.controller';
 import { UserEntity } from './user.entity';
 import { AuthModule } from '../auth/auth.module';
 import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([UserEntity]),
         AuthModule,
-        CloudinaryModule
+        CloudinaryModule,
+        ConfigModule
     ],
-    providers: [UserService],
+    providers: [UserService, ConfigService],
     controllers: [UserController],
     exports: [UserService]
 })
