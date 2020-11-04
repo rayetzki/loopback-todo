@@ -142,7 +142,7 @@ export class UserService {
                         return this.authService.generateJWT(user).pipe(
                             map((jwt: string) => ({
                                 jwt,
-                                expiresIn: this.configService.get('JWT_EXPIRES_IN'),
+                                expiresIn: new Date().getTime() + this.configService.get('JWT_EXPIRES_IN').split('s')[0],
                                 userId: user.id
                             }))
                         );
