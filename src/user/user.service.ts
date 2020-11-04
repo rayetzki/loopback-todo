@@ -139,10 +139,12 @@ export class UserService {
             this.validate(email, password).pipe(
                 switchMap((user: User) => {
                     if (user) {
+                        const expiresIn: number = Number(this.configService.get('JWT_EXPIRES_IN'));
+
                         return this.authService.generateJWT(user).pipe(
                             map((jwt: string) => ({
                                 jwt,
-                                expiresIn: new Date().getTime() + this.configService.get('JWT_EXPIRES_IN').split('s')[0],
+                                expiresIn: new Date().getTime() + expiresIn,
                                 userId: user.id
                             }))
                         );
