@@ -22,7 +22,7 @@ export class UserService {
 
     create(user: User): Observable<User> {
         return from(
-            this.userRepository.findOneOrFail({ email: user.email })
+            this.userRepository.findOne({ email: user.email })
         ).pipe(
             switchMap((foundUser: User) => {
                 if (foundUser.name === user.name || foundUser.email === user.email) {
@@ -139,7 +139,7 @@ export class UserService {
             this.validate(email, password).pipe(
                 switchMap((user: User) => {
                     if (user) {
-                        const expiresIn: number = Number(this.configService.get('JWT_EXPIRES_IN'));
+                        const expiresIn = Number(this.configService.get('JWT_EXPIRES_IN'));
 
                         return this.authService.generateJWT(user).pipe(
                             map((jwt: string) => ({
