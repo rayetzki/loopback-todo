@@ -25,9 +25,12 @@ export class UserService {
             this.userRepository.findOne({ email: user.email })
         ).pipe(
             switchMap((foundUser: User) => {
-                if (foundUser.name === user.name || foundUser.email === user.email) {
+                if (
+                    foundUser && foundUser.name === user.name ||
+                    foundUser && foundUser.email === user.email
+                ) {
                     throw new BadRequestException("User with such email or name already exist")
-                } else {
+                } else if (!foundUser) {
                     return this.authService
                         .hashPassword(user.password)
                         .pipe(switchMap((passwordHash: string) => {
