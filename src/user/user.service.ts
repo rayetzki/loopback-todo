@@ -10,6 +10,7 @@ import { AuthService } from '../auth/auth.service';
 import { UserEntity } from './user.entity';
 import { JwtToken } from 'src/auth/auth.interface';
 import { ConfigService } from '@nestjs/config';
+import { readFileSync } from 'fs';
 
 @Injectable()
 export class UserService {
@@ -73,10 +74,11 @@ export class UserService {
     }
 
     updateOne(id: string, user: User): Observable<User> {
+        if (user.avatar.startsWith('data:image')) delete user.avatar;
         return from(this.userRepository.update(id, user)).pipe(
             switchMap((updateResult: UpdateResult) => {
                 if (updateResult.affected === 1) {
-                    return from(this.userRepository.findOne(id)).pipe(
+                    return from(this.findOne(id)).pipe(
                         map((user: User) => user),
                         catchError(error => throwError(error))
                     )
@@ -93,8 +95,10 @@ export class UserService {
         return from(this.userRepository.delete(id));
     }
 
-    uploadAvatar(id: string, avatar: string): Observable<User> {
-        return from(this.cloudinaryService.upload(avatar)).pipe(
+    uploadAvatar(id: string, avatar): Observable<User> {
+        console.log(avatar)
+        const base64Image = readFileSync(avatar, { encoding: 'base64' })
+        return from(this.cloudinaryService.upload(base64Image)).pipe(
             map((uploadResponse: UploadApiResponse) => {
                 if (uploadResponse.created_at) {
                     this.updateOne(id, { avatar: uploadResponse.secure_url }).pipe(
@@ -104,36 +108,6 @@ export class UserService {
                 } else return new BadRequestException("Sorry, couldnt add an avatar")
             }),
             catchError((error: UploadApiErrorResponse) => throwError(error))
-        );
-    }
-
-    updateAvatar(id: string, avatar: string): Observable<User> {
-        return from(this.userRepository.findOne(id, { select: ['avatar'] })).pipe(
-            switchMap((user: User) => {
-                if (user.avatar.length !== 0) {
-                    return from(this.cloudinaryService.updateAvatar(user.avatar, avatar)).pipe(
-                        switchMap((uploadResponse: UploadApiResponse) => {
-                            return from(this.userRepository.update(id, { avatar: uploadResponse.secure_url })).pipe(
-                                switchMap((updateResult: UpdateResult) => {
-                                    if (updateResult.affected === 1) {
-                                        return from(this.userRepository.findOne(id)).pipe(
-                                            map((user: User) => user),
-                                            catchError(error => throwError(error))
-                                        )
-                                    }
-                                }),
-                                catchError(error => throwError(error))
-                            )
-                        })
-                    );
-                } else {
-                    this.uploadAvatar(id, avatar).pipe(
-                        map((user: User) => user),
-                        catchError(error => throwError(error))
-                    );
-                }
-            }),
-            catchError(error => throwError(error))
         );
     }
 

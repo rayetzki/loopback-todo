@@ -77,7 +77,6 @@ export class UserCredentials {
 }
 
 export class UserAvatar {
-    @ApiProperty()
-    @IsString()
+    @ApiProperty({ type: 'string', format: 'binary' })
     avatar: string
 }

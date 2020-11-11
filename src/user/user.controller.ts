@@ -1,16 +1,17 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
-import { ApiBody, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UploadedFile, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
+import { ApiBody, ApiConsumes, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DeleteResult, UpdateResult } from 'typeorm';
-import { PaginatedUsers, User, UserRole, UserAvatar, UserCredentials } from './user.interface';
+import { PaginatedUsers, User, UserRole, UserCredentials, UserAvatar } from './user.interface';
 import { UserService } from './user.service';
 import { JwtToken } from '../auth/auth.interface';
 import { Roles } from '../auth/auth.decorator';
 import { RolesGuard } from '../auth/role.guard';
 import { IsUserGuard, JwtAuthGuard } from '../auth/auth.guard';
 import { ConfigService } from '@nestjs/config';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('users')
 @Controller('users')
@@ -61,18 +62,6 @@ export class UserController {
         return this.userService.login(userCredendtials.email, userCredendtials.password);
     }
 
-    @ApiQuery({ name: 'id', type: 'string', required: true })
-    @ApiBody({ type: () => UserAvatar })
-    @Roles(UserRole.USER)
-    @UseGuards(JwtAuthGuard, IsUserGuard)
-    @Put('/avatar')
-    updateAvatar(
-        @Query('id') id: string,
-        @Body('avatar') avatar: string
-    ) {
-        return from(this.userService.updateAvatar(id, avatar));
-    }
-
     @UseGuards(JwtAuthGuard, IsUserGuard)
     @Put(':id')
     update(@Param('id') id: string, @Body() user: User): Observable<User> {
@@ -80,15 +69,21 @@ export class UserController {
     }
 
     @ApiParam({ name: 'id', type: 'string', required: true })
-    @ApiBody({ type: () => UserAvatar })
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        description: 'List of cats',
+        type: UserAvatar,
+    })
+    @UseInterceptors(FileInterceptor('file'))
     @Roles(UserRole.USER)
     @UseGuards(JwtAuthGuard)
     @Post('/avatar')
     uploadAvatar(
         @Query('id') id: string,
-        @Body('avatar') avatar: string
+        @UploadedFile() file
     ): Observable<User> {
-        return from(this.userService.uploadAvatar(id, avatar));
+        console.log(file)
+        return from(this.userService.uploadAvatar(id, file));
     }
 
     @ApiParam({ name: 'id', type: 'string', required: true })
