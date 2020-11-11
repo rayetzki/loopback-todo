@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UploadedFile, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
-import { ApiBody, ApiConsumes, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiParam, ApiQuery, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DeleteResult, UpdateResult } from 'typeorm';
@@ -14,6 +14,7 @@ import { ConfigService } from '@nestjs/config';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('users')
+@ApiBearerAuth()
 @Controller('users')
 export class UserController {
     constructor(
@@ -33,7 +34,7 @@ export class UserController {
         return from(this.userService.findAll(limit, page));
     }
 
-    @ApiQuery({ name: 'id', type: 'string', required: false })
+    @ApiParam({ name: 'id', type: 'string', required: false })
     @UseGuards(JwtAuthGuard, IsUserGuard)
     @Get(':id')
     findOne(@Param('id') id: string): Observable<User> {
@@ -68,21 +69,17 @@ export class UserController {
         return from(this.userService.updateOne(id, user));
     }
 
-    @ApiParam({ name: 'id', type: 'string', required: true })
+    @ApiQuery({ name: 'id', type: 'string', required: true })
+    @ApiBody({ description: 'User avatar', type: UserAvatar })
     @ApiConsumes('multipart/form-data')
-    @ApiBody({
-        description: 'List of cats',
-        type: UserAvatar,
-    })
-    @UseInterceptors(FileInterceptor('file'))
+    @UseInterceptors(FileInterceptor('avatar'))
     @Roles(UserRole.USER)
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, IsUserGuard)
     @Post('/avatar')
     uploadAvatar(
         @Query('id') id: string,
         @UploadedFile() file
     ): Observable<User> {
-        console.log(file)
         return from(this.userService.uploadAvatar(id, file));
     }
 

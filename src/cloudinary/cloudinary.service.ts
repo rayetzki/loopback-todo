@@ -7,8 +7,8 @@ import { catchError, map } from "rxjs/operators";
 export class CloudinaryService {
     constructor(@Inject('Cloudinary') private readonly cloudinaryService: typeof Cloudinary) { }
 
-    upload(avatar: string): Observable<UploadApiResponse | UploadApiErrorResponse> {
-        return from(this.cloudinaryService.uploader.upload(avatar)).pipe(
+    upload(folder: string, avatar: string): Observable<UploadApiResponse | UploadApiErrorResponse> {
+        return from(this.cloudinaryService.uploader.upload(avatar, { folder })).pipe(
             map((uploadResponse: UploadApiResponse) => uploadResponse),
             catchError((error: UploadApiErrorResponse) => throwError(error))
         );

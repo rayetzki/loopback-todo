@@ -10,7 +10,6 @@ import { AuthService } from '../auth/auth.service';
 import { UserEntity } from './user.entity';
 import { JwtToken } from 'src/auth/auth.interface';
 import { ConfigService } from '@nestjs/config';
-import { readFileSync } from 'fs';
 
 @Injectable()
 export class UserService {
@@ -95,10 +94,8 @@ export class UserService {
         return from(this.userRepository.delete(id));
     }
 
-    uploadAvatar(id: string, avatar): Observable<User> {
-        console.log(avatar)
-        const base64Image = readFileSync(avatar, { encoding: 'base64' })
-        return from(this.cloudinaryService.upload(base64Image)).pipe(
+    uploadAvatar(id: string, file): Observable<User> {
+        return from(this.cloudinaryService.upload('recipes', Buffer.from(file.buffer).toString('base64'))).pipe(
             map((uploadResponse: UploadApiResponse) => {
                 if (uploadResponse.created_at) {
                     this.updateOne(id, { avatar: uploadResponse.secure_url }).pipe(
