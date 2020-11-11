@@ -76,11 +76,11 @@ export class UserController {
     @Roles(UserRole.USER)
     @UseGuards(JwtAuthGuard, IsUserGuard)
     @Post('/avatar')
-    uploadAvatar(
+    async uploadAvatar(
         @Query('id') id: string,
         @UploadedFile() file
-    ): Observable<User> {
-        return from(this.userService.uploadAvatar(id, file));
+    ): Promise<User> {
+        return this.userService.uploadAvatar(id, file);
     }
 
     @ApiParam({ name: 'id', type: 'string', required: true })

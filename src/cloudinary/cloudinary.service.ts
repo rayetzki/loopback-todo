@@ -13,4 +13,16 @@ export class CloudinaryService {
             catchError((error: UploadApiErrorResponse) => throwError(error))
         );
     }
+
+    uploadStream(folder, file): Promise<UploadApiResponse | UploadApiErrorResponse> {
+        return new Promise((resolve, reject) => {
+            this.cloudinaryService.uploader.upload_stream(
+                { folder, resource_type: 'raw' },
+                (error: UploadApiErrorResponse, result: UploadApiResponse) => {
+                    if (error) reject(error);
+                    resolve(result);
+                }
+            ).end(Buffer.from(file.buffer));
+        });
+    }
 }

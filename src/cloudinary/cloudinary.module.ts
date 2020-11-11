@@ -15,7 +15,6 @@ const CLOUDINARY = 'Cloudinary';
                 api_key: configService.get('CLOUDINARY_API_KEY'),
                 api_secret: configService.get('CLOUDINARY_API_SECRET')
             })
-
             return Cloudinary;
         },
         inject: [ConfigService]

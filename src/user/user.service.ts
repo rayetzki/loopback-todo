@@ -1,6 +1,5 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UploadApiErrorResponse, UploadApiResponse } from 'cloudinary';
 import { from, Observable, throwError } from 'rxjs';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { catchError, map, switchMap } from 'rxjs/operators';
@@ -10,6 +9,7 @@ import { AuthService } from '../auth/auth.service';
 import { UserEntity } from './user.entity';
 import { JwtToken } from 'src/auth/auth.interface';
 import { ConfigService } from '@nestjs/config';
+import { UploadApiErrorResponse, UploadApiResponse } from 'cloudinary';
 
 @Injectable()
 export class UserService {
@@ -73,7 +73,6 @@ export class UserService {
     }
 
     updateOne(id: string, user: User): Observable<User> {
-        if (user.avatar.startsWith('data:image')) delete user.avatar;
         return from(this.userRepository.update(id, user)).pipe(
             switchMap((updateResult: UpdateResult) => {
                 if (updateResult.affected === 1) {
@@ -94,18 +93,19 @@ export class UserService {
         return from(this.userRepository.delete(id));
     }
 
-    uploadAvatar(id: string, file): Observable<User> {
-        return from(this.cloudinaryService.upload('recipes', Buffer.from(file.buffer).toString('base64'))).pipe(
-            map((uploadResponse: UploadApiResponse) => {
-                if (uploadResponse.created_at) {
-                    this.updateOne(id, { avatar: uploadResponse.secure_url }).pipe(
-                        map((user: User) => user),
-                        catchError(error => throwError(error))
-                    )
-                } else return new BadRequestException("Sorry, couldnt add an avatar")
-            }),
-            catchError((error: UploadApiErrorResponse) => throwError(error))
-        );
+    async uploadAvatar(id: string, file): Promise<User> {
+        try {
+            const uploadResponse: UploadApiResponse | UploadApiErrorResponse = await this.cloudinaryService.uploadStream('avatars', file);
+            if (uploadResponse) {
+                const updateResult: UpdateResult = await this.userRepository.update(id, { avatar: uploadResponse.secure_url });
+                if (updateResult.affected === 1) {
+                    const user: User = await this.userRepository.findOne(id);
+                    return user;
+                }
+            }
+        } catch (error) {
+            throw new InternalServerErrorException(error);
+        }
     }
 
     login(email: string, password: string): Observable<JwtToken | unknown> {
