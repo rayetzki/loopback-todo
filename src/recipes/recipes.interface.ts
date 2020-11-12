@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsArray, IsEnum, IsNotEmpty, IsString } from "class-validator";
+import { IsArray, IsEnum, IsNotEmpty, IsString, IsUrl } from "class-validator";
 import { User } from "src/user/user.interface";
 
 export enum NutritionType {
@@ -65,6 +65,10 @@ export class Recipe {
     cookingTime: string
 
     @ApiProperty()
+    @IsUrl()
+    banner: string
+
+    @ApiProperty()
     @IsEnum(DayTime)
     dayTime: DayTime
 
@@ -93,4 +97,9 @@ export interface PaginatedRecipes {
 export type RecipeIngredients = {
     ingredient: string
     unit: string
+}
+
+export class RecipeBanner {
+    @ApiProperty({ type: 'string', format: 'binary' })
+    banner: string
 }

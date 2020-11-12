@@ -39,6 +39,9 @@ export class RecipeEntity {
     @Column()
     body: string;
 
+    @Column({ default: '' })
+    banner: string;
+
     @Column({ type: "enum", enum: NutritionType, default: NutritionType.ANY })
     nutritionType: NutritionType;
 

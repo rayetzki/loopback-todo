@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, Scope } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, InternalServerErrorException, Scope } from "@nestjs/common";
 import slugify from "slugify";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Request } from "express";
@@ -9,12 +9,15 @@ import { catchError, map, switchMap } from "rxjs/operators";
 import { User } from "../user/user.interface";
 import { RecipeEntity } from "./recipes.entity";
 import { PaginatedRecipes, Recipe } from "./recipes.interface";
+import { CloudinaryService } from "src/cloudinary/cloudinary.service";
+import { UploadApiErrorResponse, UploadApiResponse } from "cloudinary";
 
 @Injectable({ scope: Scope.REQUEST })
 export class RecipesService {
     constructor(
         @InjectRepository(RecipeEntity) private readonly recipesRepository: Repository<RecipeEntity>,
-        @Inject(REQUEST) private readonly request: Request
+        @Inject(REQUEST) private readonly request: Request,
+        private readonly cloudinaryService: CloudinaryService
     ) { }
 
     findAll(limit: number, page: number): Observable<PaginatedRecipes> {
@@ -53,7 +56,7 @@ export class RecipesService {
                 perPage: page !== 0 ? page * limit : count
             })),
             catchError(error => throwError(error))
-        )
+        );
     }
 
     create(recipe: Recipe): Observable<Recipe> {
@@ -86,17 +89,32 @@ export class RecipesService {
                 }
             }),
             catchError(error => throwError(error))
-        )
+        );
     }
 
     delete(id: string): Observable<DeleteResult> {
         return from(this.recipesRepository.delete(id)).pipe(
             map((deleteResult: DeleteResult) => deleteResult),
             catchError(error => throwError(error))
-        )
+        );
     }
 
     generateSlug(title: string): Observable<string> {
         return of(slugify(title));
     }
+
+    async uploadBanner(id: string, file): Promise<Recipe> {
+        try {
+            const uploadResponse: UploadApiResponse | UploadApiErrorResponse = await this.cloudinaryService.uploadStream('recipes', file);
+            if (uploadResponse) {
+                const updateResult: UpdateResult = await this.recipesRepository.update(id, { banner: uploadResponse.secure_url })
+                if (updateResult.affected === 1) {
+                    return this.recipesRepository.findOne(id);
+                };
+            };
+        } catch (error) {
+            console.error(error)
+            throw new InternalServerErrorException(`Could not load recipes' banner`);
+        }
+    };
 }

@@ -1,11 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards, UsePipes, ValidationPipe } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UploadedFile, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
 import { from, Observable } from "rxjs";
 import { RecipesService } from "./recipes.service";
-import { PaginatedRecipes, Recipe } from "./recipes.interface";
+import { PaginatedRecipes, Recipe, RecipeBanner } from "./recipes.interface";
 import { IsUserGuard, JwtAuthGuard } from "../auth/auth.guard";
 import { DeleteResult } from "typeorm";
 import { AuthorGuard } from "./recipes.guard";
-import { ApiBearerAuth, ApiBody, ApiParam, ApiQuery, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiParam, ApiQuery, ApiTags } from "@nestjs/swagger";
+import { FileInterceptor } from "@nestjs/platform-express";
 
 @ApiTags('recipes')
 @ApiBearerAuth()
@@ -52,5 +53,18 @@ export class RecipesController {
     @Delete(':id')
     delete(@Param('id') id: string): Observable<DeleteResult> {
         return from(this.recipesService.delete(id));
+    }
+
+    @ApiQuery({ name: 'id', type: 'string', required: true })
+    @ApiBody({ description: 'User avatar', type: RecipeBanner })
+    @UseGuards(JwtAuthGuard, IsUserGuard)
+    @ApiConsumes('multipart/form-data')
+    @UseInterceptors(FileInterceptor('banner'))
+    @Post('/banner')
+    uploadBanner(
+        @Query('id') id: string,
+        @UploadedFile() file
+    ): Promise<Recipe> {
+        return this.recipesService.uploadBanner(id, file);
     }
 }
