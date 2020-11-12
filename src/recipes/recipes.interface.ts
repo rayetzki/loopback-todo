@@ -10,6 +10,14 @@ export enum NutritionType {
     RAW = 'raw'
 }
 
+export enum DayTime {
+    BREAKFAST = 'завтрак',
+    LUNCH = 'обед',
+    SUPPER = 'полудник',
+    SNACK = 'перекус',
+    DINNER = 'ужин'
+}
+
 export class Recipe {
     id: string
     createdAt: Date
@@ -56,6 +64,10 @@ export class Recipe {
     @IsNotEmpty()
     cookingTime: string
 
+    @ApiProperty()
+    @IsEnum(DayTime)
+    dayTime: DayTime
+
     @ApiProperty({
         default: NutritionType.ANY,
         enum: [
@@ -66,7 +78,6 @@ export class Recipe {
             NutritionType.VEGETARIAN
         ]
     })
-    @IsEnum(NutritionType)
     @IsNotEmpty()
     nutritionType: NutritionType
 }

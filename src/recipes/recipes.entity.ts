@@ -1,5 +1,5 @@
 import { BeforeUpdate, Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { NutritionType, RecipeIngredients } from "./recipes.interface";
+import { DayTime, NutritionType, RecipeIngredients } from "./recipes.interface";
 import { UserEntity } from "../user/user.entity";
 
 @Entity("recipes")
@@ -27,7 +27,7 @@ export class RecipeEntity {
     @Column({ type: "varchar" })
     description: string;
 
-    @Column('jsonb')
+    @Column({ type: "jsonb" })
     ingredients: RecipeIngredients[];
 
     @Column()
@@ -39,8 +39,11 @@ export class RecipeEntity {
     @Column()
     body: string;
 
-    @Column({ default: NutritionType.ANY })
+    @Column({ type: "enum", enum: NutritionType, default: NutritionType.ANY })
     nutritionType: NutritionType;
+
+    @Column({ type: "enum", enum: DayTime, default: DayTime.LUNCH })
+    dayTime: DayTime;
 
     @ManyToOne(() => UserEntity, user => user.recipes)
     author: UserEntity;

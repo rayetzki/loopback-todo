@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UploadedFile, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiBody, ApiConsumes, ApiParam, ApiQuery, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { from, Observable } from 'rxjs';
@@ -93,7 +92,7 @@ export class UserController {
 
     @ApiParam({ name: 'id', type: 'string', required: true })
     @ApiQuery({ name: 'role', enum: UserRole })
-    @Roles(UserRole.USER)
+    @Roles(UserRole.ADMIN)
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Put(':id/role')
     updateRole(@Param('id') id: string, @Query() role: UserRole): Observable<UpdateResult> {

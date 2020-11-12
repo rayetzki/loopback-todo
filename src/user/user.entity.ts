@@ -12,7 +12,7 @@ export class UserEntity {
     @Column()
     name: string;
 
-    @Column()
+    @Column({ type: "enum", enum: NutritionType, default: NutritionType.ANY })
     @IsEnum(NutritionType)
     nutrition: NutritionType
 
@@ -22,7 +22,7 @@ export class UserEntity {
     @Column({ unique: true })
     email: string;
 
-    @Column({ default: "" })
+    @Column({ default: "https://cdn3.iconfinder.com/data/icons/avatars-9/145/Avatar_Cat-512.png" })
     avatar: string;
 
     @Column({ select: false })
