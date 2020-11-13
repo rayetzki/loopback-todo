@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsEmail, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { Favourite } from "../favourites/favourites.interface";
 import { NutritionType, Recipe } from "../recipes/recipes.interface";
 
 export enum UserRole {
@@ -56,6 +57,7 @@ export class User {
     role?: UserRole
 
     recipes?: Recipe[]
+    favourites?: Favourite[]
 }
 
 export interface PaginatedUsers {

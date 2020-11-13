@@ -7,6 +7,7 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { RecipeModule } from './recipes/recipes.module';
 import { LoggerMiddleware } from './app.logger';
+import { FavouritesModule } from './favourites/favourites.module';
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { LoggerMiddleware } from './app.logger';
     }),
     UserModule,
     AuthModule,
-    RecipeModule
+    RecipeModule,
+    FavouritesModule
   ],
   controllers: [],
   providers: []

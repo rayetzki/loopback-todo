@@ -1,8 +1,9 @@
+import { IsEnum } from "class-validator";
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { UserRole } from "./user.interface";
 import { RecipeEntity } from "../recipes/recipes.entity";
-import { NutritionType } from "src/recipes/recipes.interface";
-import { IsEnum } from "class-validator";
+import { NutritionType } from "../recipes/recipes.interface";
+import { FavouritesEntity } from "../favourites/favourites.entity";
 
 @Entity("users")
 export class UserEntity {
@@ -33,4 +34,7 @@ export class UserEntity {
 
     @OneToMany(() => RecipeEntity, recipe => recipe.author)
     recipes: RecipeEntity[];
+
+    @OneToMany(() => FavouritesEntity, favourites => favourites.addedBy, { onDelete: "CASCADE" })
+    favourites: FavouritesEntity[];
 }

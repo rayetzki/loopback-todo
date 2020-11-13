@@ -24,7 +24,7 @@ export class RecipesService {
         return from(this.recipesRepository.findAndCount({
             skip: page,
             take: limit,
-            relations: ['author']
+            relations: ['author', 'favourites']
         })).pipe(
             map(([recipes, count]) => ({
                 recipes,
