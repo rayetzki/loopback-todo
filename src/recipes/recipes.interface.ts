@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsArray, IsEnum, IsNotEmpty, IsString, IsUrl } from "class-validator";
+import { Favourite } from "src/favourites/favourites.interface";
 import { User } from "src/user/user.interface";
 
 export enum NutritionType {
@@ -24,6 +25,7 @@ export class Recipe {
     updatedAt: Date
     slug: string
     author: User
+    favourite: Favourite;
 
     @ApiProperty()
     @IsString()

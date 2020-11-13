@@ -1,23 +1,22 @@
-import { BadRequestException, Inject, Injectable, InternalServerErrorException, Scope } from "@nestjs/common";
+import { BadRequestException, Injectable, InternalServerErrorException } from "@nestjs/common";
 import slugify from "slugify";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Request } from "express";
-import { REQUEST } from "@nestjs/core";
 import { DeleteResult, Repository, UpdateResult } from "typeorm";
 import { from, Observable, of, throwError } from "rxjs";
 import { catchError, map, switchMap } from "rxjs/operators";
-import { User } from "../user/user.interface";
 import { RecipeEntity } from "./recipes.entity";
 import { PaginatedRecipes, Recipe } from "./recipes.interface";
 import { CloudinaryService } from "src/cloudinary/cloudinary.service";
 import { UploadApiErrorResponse, UploadApiResponse } from "cloudinary";
+import { UserService } from "src/user/user.service";
+import { User } from "src/user/user.interface";
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class RecipesService {
     constructor(
         @InjectRepository(RecipeEntity) private readonly recipesRepository: Repository<RecipeEntity>,
-        @Inject(REQUEST) private readonly request: Request,
-        private readonly cloudinaryService: CloudinaryService
+        private readonly cloudinaryService: CloudinaryService,
+        private readonly userService: UserService
     ) { }
 
     findAll(limit: number, page: number): Observable<PaginatedRecipes> {
@@ -38,7 +37,7 @@ export class RecipesService {
     }
 
     findOne(id: string): Observable<Recipe> {
-        return from(this.recipesRepository.findOne(id, { relations: ['author'] }));
+        return from(this.recipesRepository.findOne(id, { relations: ['author', 'favourite'] }));
     }
 
     findByUser(userId: string, page: number, limit: number): Observable<PaginatedRecipes> {
@@ -46,7 +45,7 @@ export class RecipesService {
             where: { author: userId },
             skip: page,
             take: limit,
-            relations: ['author']
+            relations: ['author', 'favourite']
         })).pipe(
             map(([recipes, count]) => ({
                 recipes,
@@ -59,17 +58,19 @@ export class RecipesService {
         );
     }
 
-    create(recipe: Recipe): Observable<Recipe> {
-        const user: User = this.request.user;
-
+    create(userId: string, recipe: Recipe): Observable<Recipe> {
         return from(this.recipesRepository.findOne({ title: recipe.title })).pipe(
             switchMap((foundRecipe: Recipe) => {
-                if (foundRecipe.title === recipe.title) {
+                if (foundRecipe && foundRecipe.title === recipe.title) {
                     throw new BadRequestException('Recipe with such name already exist');
                 } else {
                     return from(this.generateSlug(recipe.title)).pipe(
                         switchMap((slug: string) => {
-                            return from(this.recipesRepository.save({ ...recipe, slug, author: user }));
+                            return from(this.userService.findOne(userId)).pipe(
+                                switchMap((user: User) =>
+                                    this.recipesRepository.save({ ...recipe, slug, author: user })
+                                )
+                            );
                         }),
                         catchError(error => throwError(error))
                     );
@@ -113,7 +114,6 @@ export class RecipesService {
                 };
             };
         } catch (error) {
-            console.error(error)
             throw new InternalServerErrorException(`Could not load recipes' banner`);
         }
     };

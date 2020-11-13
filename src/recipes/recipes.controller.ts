@@ -37,8 +37,11 @@ export class RecipesController {
     @UseGuards(JwtAuthGuard, IsUserGuard)
     @Post()
     @UsePipes(ValidationPipe)
-    create(@Body() recipe: Recipe): Observable<Recipe> {
-        return from(this.recipesService.create(recipe));
+    create(
+        @Query('userId') userId: string,
+        @Body() recipe: Recipe
+    ): Observable<Recipe> {
+        return from(this.recipesService.create(userId, recipe));
     }
 
     @ApiParam({ name: 'id', type: 'string', required: true })

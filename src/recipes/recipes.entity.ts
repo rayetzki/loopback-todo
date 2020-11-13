@@ -1,4 +1,4 @@
-import { BeforeUpdate, Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeUpdate, Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { DayTime, NutritionType, RecipeIngredients } from "./recipes.interface";
 import { UserEntity } from "../user/user.entity";
 import { FavouritesEntity } from "../favourites/favourites.entity";
@@ -52,6 +52,6 @@ export class RecipeEntity {
     @ManyToOne(() => UserEntity, user => user.recipes)
     author: UserEntity;
 
-    @OneToMany(() => FavouritesEntity, favourites => favourites.recipe, { onDelete: "CASCADE" })
+    @ManyToOne(() => FavouritesEntity, favourites => favourites.recipe, { onDelete: "CASCADE" })
     favourite: FavouritesEntity;
 }

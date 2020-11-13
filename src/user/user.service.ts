@@ -48,21 +48,23 @@ export class UserService {
     }
 
     findAll(limit: number, page: number): Observable<PaginatedUsers> {
-        return from(this.userRepository.findAndCount({ skip: page, take: limit })).pipe(
-            map(([users, count]) => {
-                return {
-                    users,
-                    total: count,
-                    page,
-                    perPage: page !== 0 ? page * limit : count
-                };
-            }),
+        return from(this.userRepository.findAndCount({
+            skip: page,
+            take: limit,
+            relations: ['favourites']
+        })).pipe(
+            map(([users, count]) => ({
+                users,
+                total: count,
+                page,
+                perPage: page !== 0 ? page * limit : count
+            })),
             catchError(error => throwError(error))
         );
     }
 
     findOne(id: string): Observable<User> {
-        return from(this.userRepository.findOne(id)).pipe(map((user: User) => user));
+        return from(this.userRepository.findOne(id, { relations: ['favourites'] })).pipe(map((user: User) => user));
     }
 
     search(name: string): Observable<User[]> {
@@ -114,7 +116,6 @@ export class UserService {
                 switchMap((user: User) => {
                     if (user) {
                         const expiresIn = Number(this.configService.get('JWT_EXPIRES_IN'));
-
                         return this.authService.generateJWT(user).pipe(
                             map((jwt: string) => ({
                                 jwt,
