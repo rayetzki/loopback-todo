@@ -14,5 +14,5 @@ export class FavouritesEntity {
     addedBy: UserEntity;
 
     @ManyToOne(() => RecipeEntity, recipe => recipe.favourite)
-    recipe: RecipeEntity[];
+    recipe: RecipeEntity;
 }

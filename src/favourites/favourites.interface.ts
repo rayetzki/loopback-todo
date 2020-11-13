@@ -13,5 +13,5 @@ export class Favourite {
     addedBy?: User;
 
     @IsArray()
-    recipe?: Recipe[];
+    recipe?: Recipe;
 }
