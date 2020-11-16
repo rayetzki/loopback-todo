@@ -43,7 +43,7 @@ export class AuthService {
         return from(this.jwtService.signAsync({ user }, {
             secret: this.configService.get('REFRESH_SECRET'),
             expiresIn: this.configService.get('REFRESH_EXPIRES_IN')
-        })).pipe(map((refreshToken: string) => refreshToken))
+        })).pipe(map((refreshToken: string) => refreshToken));
     }
 
     validateAccessToken(accessToken: string): Observable<boolean> {

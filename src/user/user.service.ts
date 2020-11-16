@@ -159,11 +159,11 @@ export class UserService {
         return from(this.userRepository.findOneOrFail({ id })).pipe(
             switchMap((user: User) => {
                 return from(this.authService.validateRefreshToken(refreshToken)).pipe(
-                    map(() => {
+                    switchMap(() => {
                         return from(this.authService.generateAccessRefreshPair(user)).pipe(
-                            switchMap((jwt: JwtToken) => {
+                            switchMap((jwtToken: JwtToken) => {
                                 return from(this.userRepository.update(id, { refreshToken })).pipe(
-                                    map((updateResult: UpdateResult) => updateResult && jwt)
+                                    map(() => jwtToken)
                                 )
                             })
                         )
