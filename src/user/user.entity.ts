@@ -4,7 +4,6 @@ import { UserRole } from "./user.interface";
 import { RecipeEntity } from "../recipes/recipes.entity";
 import { NutritionType } from "../recipes/recipes.interface";
 import { FavouritesEntity } from "../favourites/favourites.entity";
-import { Exclude } from "class-transformer";
 
 @Entity("users")
 export class UserEntity {
@@ -33,8 +32,7 @@ export class UserEntity {
     @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
     role: UserRole;
 
-    @Column({ nullable: true })
-    @Exclude()
+    @Column({ nullable: true, select: false })
     refreshToken: string;
 
     @OneToMany(() => RecipeEntity, recipe => recipe.author, { onDelete: "CASCADE" })
