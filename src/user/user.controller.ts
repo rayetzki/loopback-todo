@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put, Query, UploadedFile, U
 import { ApiBody, ApiConsumes, ApiParam, ApiQuery, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { from, Observable } from 'rxjs';
 import { DeleteResult, UpdateResult } from 'typeorm';
-import { PaginatedUsers, User, UserRole, UserCredentials, UserAvatar } from './user.interface';
+import { PaginatedUsers, User, UserRole, UserCredentials, UserAvatar, RefreshToken } from './user.interface';
 import { UserService } from './user.service';
 import { JwtToken } from '../auth/auth.interface';
 import { Roles } from '../auth/auth.decorator';
@@ -52,7 +52,18 @@ export class UserController {
     @Post('/login')
     @UsePipes(ValidationPipe)
     login(@Body() userCredendtials: UserCredentials): Observable<JwtToken | unknown> {
-        return this.userService.login(userCredendtials.email, userCredendtials.password);
+        return from(this.userService.login(userCredendtials.email, userCredendtials.password));
+    }
+
+    @ApiBody({ type: () => RefreshToken })
+    @ApiQuery({ name: 'id', type: 'string', description: 'Current user id' })
+    @Post('/refresh')
+    @UsePipes(ValidationPipe)
+    refresh(
+        @Body('refreshToken') refreshToken: string,
+        @Query('id') id: string
+    ): Observable<JwtToken | unknown> {
+        return from(this.userService.refresh(id, refreshToken));
     }
 
     @UseGuards(JwtAuthGuard, IsUserGuard)

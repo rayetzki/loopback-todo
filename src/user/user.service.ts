@@ -8,7 +8,6 @@ import { PaginatedUsers, User, UserRole } from './user.interface';
 import { AuthService } from '../auth/auth.service';
 import { UserEntity } from './user.entity';
 import { JwtToken } from 'src/auth/auth.interface';
-import { ConfigService } from '@nestjs/config';
 import { UploadApiErrorResponse, UploadApiResponse } from 'cloudinary';
 
 @Injectable()
@@ -16,8 +15,7 @@ export class UserService {
     constructor(
         @InjectRepository(UserEntity) private readonly userRepository: Repository<UserEntity>,
         private readonly authService: AuthService,
-        private readonly cloudinaryService: CloudinaryService,
-        private readonly configService: ConfigService
+        private readonly cloudinaryService: CloudinaryService
     ) { }
 
     create(user: User): Observable<User> {
@@ -127,13 +125,13 @@ export class UserService {
             this.validate(email, password).pipe(
                 switchMap((user: User) => {
                     if (user) {
-                        const expiresIn = Number(this.configService.get('JWT_EXPIRES_IN'));
-                        return this.authService.generateJWT(user).pipe(
-                            map((jwt: string) => ({
-                                jwt,
-                                expiresIn: new Date().getTime() + expiresIn,
-                                userId: user.id
-                            }))
+                        return this.authService.generateAccessRefreshPair(user).pipe(
+                            switchMap((jwtToken: JwtToken) => {
+                                return from(this.userRepository.update(
+                                    user.id,
+                                    { refreshToken: jwtToken.refreshToken }
+                                )).pipe(map(() => jwtToken))
+                            })
                         );
                     } else {
                         throw new NotFoundException('Email or password are not correct');
@@ -155,5 +153,23 @@ export class UserService {
                 )
             )
         );
+    }
+
+    refresh(id: string, refreshToken: string): Observable<JwtToken | unknown> {
+        return from(this.userRepository.findOneOrFail({ id })).pipe(
+            switchMap((user: User) => {
+                return from(this.authService.validateRefreshToken(refreshToken)).pipe(
+                    map(() => {
+                        return from(this.authService.generateAccessRefreshPair(user)).pipe(
+                            switchMap((jwt: JwtToken) => {
+                                return from(this.userRepository.update(id, { refreshToken })).pipe(
+                                    map((updateResult: UpdateResult) => updateResult && jwt)
+                                )
+                            })
+                        )
+                    })
+                )
+            })
+        )
     }
 }

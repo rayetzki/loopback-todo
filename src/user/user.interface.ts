@@ -27,6 +27,9 @@ export class User {
     @IsNotEmpty()
     email?: string
 
+    @IsString()
+    refreshToken?: string;
+
     @ApiProperty({
         default: NutritionType.ANY,
         enum: [
@@ -81,4 +84,9 @@ export class UserCredentials {
 export class UserAvatar {
     @ApiProperty({ type: 'string', format: 'binary' })
     avatar: string
+}
+
+export class RefreshToken {
+    @ApiProperty({ type: 'string' })
+    refreshToken: string
 }
