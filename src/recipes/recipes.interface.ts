@@ -105,3 +105,7 @@ export class RecipeBanner {
     @ApiProperty({ type: 'string', format: 'binary' })
     banner: string
 }
+
+export interface DoNotEatAtNight {
+    message: string
+}

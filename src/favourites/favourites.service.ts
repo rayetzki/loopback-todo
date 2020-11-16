@@ -16,20 +16,23 @@ export class FavouritesService {
         return from(this.favouritesRepository.find({
             where: { userId },
             relations: ['addedBy']
-        })).pipe(map((favourites: Favourite[]) => favourites))
+        })).pipe(
+            map((favourites: Favourite[]) => favourites),
+            catchError(error => throwError(error))
+        );
     }
 
     addFavourite(favourite: Favourite): Observable<Favourite> {
         return from(this.favouritesRepository.save(favourite)).pipe(
             map((favourite: Favourite) => favourite),
             catchError(error => throwError(error))
-        )
+        );
     }
 
     removeFavourite(favourite: Favourite): Observable<boolean> {
         return from(this.favouritesRepository.delete(favourite)).pipe(
             map((deleteResult: DeleteResult) => deleteResult.affected === 1 && true),
             catchError(error => throwError(error))
-        )
+        );
     }
 }

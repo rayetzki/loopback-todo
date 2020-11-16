@@ -3,9 +3,9 @@ import slugify from "slugify";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DeleteResult, Repository, UpdateResult } from "typeorm";
 import { from, Observable, of, throwError } from "rxjs";
-import { catchError, map, switchMap } from "rxjs/operators";
+import { catchError, filter, map, switchMap } from "rxjs/operators";
 import { RecipeEntity } from "./recipes.entity";
-import { PaginatedRecipes, Recipe } from "./recipes.interface";
+import { PaginatedRecipes, Recipe, DayTime, DoNotEatAtNight } from "./recipes.interface";
 import { CloudinaryService } from "src/cloudinary/cloudinary.service";
 import { UploadApiErrorResponse, UploadApiResponse } from "cloudinary";
 import { UserService } from "src/user/user.service";
@@ -117,4 +117,33 @@ export class RecipesService {
             throw new InternalServerErrorException(`Could not load recipes' banner`);
         }
     };
+
+    recommendRecipe(): Observable<Recipe | DoNotEatAtNight> {
+        const now = new Date().getHours();
+
+        let dayTime;
+        if (now >= 6 && now <= 9) {
+            dayTime = DayTime.BREAKFAST;
+        } else if (now > 9 && now <= 11) {
+            dayTime = DayTime.SNACK;
+        } else if (now > 11 && now <= 13) {
+            dayTime = DayTime.LUNCH;
+        } else if (now > 13 && now <= 16) {
+            dayTime = DayTime.DINNER;
+        } else if (now > 16 && now < 19) {
+            dayTime = DayTime.DINNER;
+        };
+
+        if (dayTime) {
+            return from(this.recipesRepository.findAndCount({ where: { dayTime } })).pipe(
+                filter(([recipes, count]) => recipes.length > 0 && count > 0),
+                map(([recipes, count]) => recipes[Math.floor(Math.random() * count)]),
+                catchError(error => throwError(error))
+            );
+        } else {
+            return of({
+                message: "Кушать ночью очень вредно для здоровья. Мы рекоммендуем спать в ночное время. Спокойной ночи!"
+            })
+        }
+    }
 }
