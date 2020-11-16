@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { from, Observable, throwError } from 'rxjs';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
@@ -21,30 +21,34 @@ export class UserService {
     ) { }
 
     create(user: User): Observable<User> {
-        return from(
-            this.userRepository.findOne({ email: user.email })
-        ).pipe(
-            switchMap((foundUser: User) => {
-                if (
-                    foundUser && foundUser.name === user.name ||
-                    foundUser && foundUser.email === user.email
-                ) {
-                    throw new BadRequestException("User with such email or name already exist")
-                } else if (!foundUser) {
-                    return this.authService
-                        .hashPassword(user.password)
-                        .pipe(switchMap((passwordHash: string) => {
-                            return from(this.userRepository.save({
-                                ...user,
-                                password: passwordHash
-                            })).pipe(
-                                map((user: User) => user),
-                                catchError(error => throwError(error))
-                            )
-                        }))
-                }
-            })
-        )
+        if (user.role === UserRole.ADMIN) {
+            throw new ForbiddenException("Ты не можешь стать админом");
+        } else {
+            return from(
+                this.userRepository.findOne({ email: user.email })
+            ).pipe(
+                switchMap((foundUser: User) => {
+                    if (
+                        foundUser && foundUser.name === user.name ||
+                        foundUser && foundUser.email === user.email
+                    ) {
+                        throw new BadRequestException("User with such email or name already exist")
+                    } else if (!foundUser) {
+                        return this.authService
+                            .hashPassword(user.password)
+                            .pipe(switchMap((passwordHash: string) => {
+                                return from(this.userRepository.save({
+                                    ...user,
+                                    password: passwordHash
+                                })).pipe(
+                                    map((user: User) => user),
+                                    catchError(error => throwError(error))
+                                )
+                            }))
+                    }
+                })
+            )
+        }
     }
 
     findAll(limit: number, page: number): Observable<PaginatedUsers> {
@@ -75,16 +79,24 @@ export class UserService {
     }
 
     updateOne(id: string, user: User): Observable<User> {
-        return from(this.userRepository.update(id, user)).pipe(
-            switchMap((updateResult: UpdateResult) => {
-                if (updateResult.affected === 1) {
-                    return from(this.findOne(id)).pipe(
-                        map((user: User) => user),
-                        catchError(error => throwError(error))
-                    )
-                }
+        return from(this.userRepository.findOne(id)).pipe(
+            switchMap((foundUser: User) => {
+                if (foundUser.role !== UserRole.ADMIN && user.role === UserRole.ADMIN) {
+                    throw new ForbiddenException("Ты не можешь стать админом");
+                } else {
+                    return from(this.userRepository.update(id, user)).pipe(
+                        switchMap((updateResult: UpdateResult) => {
+                            if (updateResult.affected === 1) {
+                                return from(this.findOne(id)).pipe(
+                                    map((user: User) => user),
+                                    catchError(error => throwError(error))
+                                )
+                            }
+                        })
+                    );
+                };
             })
-        );
+        )
     }
 
     updateRole(id: string, role: UserRole): Observable<UpdateResult> {

@@ -49,7 +49,7 @@ export class RecipeEntity {
     @Column({ type: "enum", enum: DayTime, default: DayTime.LUNCH })
     dayTime: DayTime;
 
-    @ManyToOne(() => UserEntity, user => user.recipes)
+    @ManyToOne(() => UserEntity, user => user.recipes, { onDelete: "CASCADE" })
     author: UserEntity;
 
     @ManyToOne(() => FavouritesEntity, favourites => favourites.recipe, { onDelete: "CASCADE" })

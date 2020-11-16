@@ -32,7 +32,7 @@ export class UserEntity {
     @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
     role: UserRole;
 
-    @OneToMany(() => RecipeEntity, recipe => recipe.author)
+    @OneToMany(() => RecipeEntity, recipe => recipe.author, { onDelete: "CASCADE" })
     recipes: RecipeEntity[];
 
     @OneToMany(() => FavouritesEntity, favourites => favourites.addedBy, { onDelete: "CASCADE" })

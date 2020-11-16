@@ -1,7 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UploadedFile, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiBody, ApiConsumes, ApiParam, ApiQuery, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { from, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { DeleteResult, UpdateResult } from 'typeorm';
 import { PaginatedUsers, User, UserRole, UserCredentials, UserAvatar } from './user.interface';
 import { UserService } from './user.service';
@@ -9,17 +8,13 @@ import { JwtToken } from '../auth/auth.interface';
 import { Roles } from '../auth/auth.decorator';
 import { RolesGuard } from '../auth/role.guard';
 import { IsUserGuard, JwtAuthGuard } from '../auth/auth.guard';
-import { ConfigService } from '@nestjs/config';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('users')
 @ApiBearerAuth()
 @Controller('users')
 export class UserController {
-    constructor(
-        private readonly userService: UserService,
-        private readonly configService: ConfigService
-    ) { }
+    constructor(private readonly userService: UserService) { }
 
     @ApiQuery({ name: 'limit', type: 'number', required: false })
     @ApiQuery({ name: 'page', type: 'number', required: false })
@@ -50,9 +45,7 @@ export class UserController {
     @Post()
     @UsePipes(ValidationPipe)
     create(@Body() user: User): Observable<User> {
-        return from(this.userService.create(user)).pipe(
-            map((user: User) => user)
-        );
+        return from(this.userService.create(user));
     }
 
     @ApiBody({ type: () => UserCredentials })
