@@ -17,14 +17,15 @@ export class AuthService {
     generateAccessRefreshPair(user: User): Observable<JwtToken> {
         const expiresIn = Number(this.configService.get('ACCESS_EXPIRES_IN').split('s')[1]);
         const refreshExpiresIn = Number(this.configService.get('REFRESH_EXPIRES_IN').split('s')[1]);
+
         return from(this.generateAccessToken(user)).pipe(
             switchMap((accessToken: string) => {
                 return from(this.generateRefreshToken(user)).pipe(
                     map((refreshToken: string) => ({
                         accessToken,
-                        expiresIn: new Date().getTime() + expiresIn,
+                        expiresIn: new Date().setSeconds(new Date().getSeconds() + expiresIn),
                         refreshToken,
-                        refreshExpiresIn: new Date().getTime() + refreshExpiresIn,
+                        refreshExpiresIn: new Date().setSeconds(new Date().getSeconds() + refreshExpiresIn),
                         userId: user.id
                     }))
                 )
@@ -73,7 +74,7 @@ export class AuthService {
     }
 
     validateExpirationTime(expirationTime: number): Observable<boolean> {
-        return of(new Date().getTime() - expirationTime > 0);
+        return of(expirationTime - new Date().getTime() > 0);
     }
 
     hashPassword(password: string): Observable<string | unknown> {
