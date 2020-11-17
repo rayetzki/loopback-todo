@@ -23,9 +23,9 @@ export class AuthService {
                 return from(this.generateRefreshToken(user)).pipe(
                     map((refreshToken: string) => ({
                         accessToken,
-                        expiresIn: new Date().setMilliseconds(new Date().getMilliseconds() + expiresIn),
+                        expiresIn: new Date().setSeconds(new Date().getSeconds() + expiresIn),
                         refreshToken,
-                        refreshExpiresIn: new Date().setMilliseconds(new Date().getMilliseconds() + refreshExpiresIn),
+                        refreshExpiresIn: new Date().setSeconds(new Date().getSeconds() + refreshExpiresIn),
                         userId: user.id
                     }))
                 )
