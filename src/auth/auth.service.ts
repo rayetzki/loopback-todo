@@ -15,9 +15,9 @@ export class AuthService {
     ) { }
 
     generateAccessRefreshPair(user: User): Observable<JwtToken> {
-        const expiresIn = Number(this.configService.get('ACCESS_EXPIRES_IN').split('s')[1]);
-        const refreshExpiresIn = Number(this.configService.get('REFRESH_EXPIRES_IN').split('s')[1]);
-
+        const expiresIn = Number(this.configService.get('ACCESS_EXPIRES_IN').split('s')[0]);
+        const refreshExpiresIn = Number(this.configService.get('REFRESH_EXPIRES_IN').split('s')[0]);
+        console.log({ expiresIn: this.configService.get('ACCESS_EXPIRES_IN'), refreshExpiresIn: this.configService.get('REFRESH_EXPIRES_IN') })
         return from(this.generateAccessToken(user)).pipe(
             switchMap((accessToken: string) => {
                 return from(this.generateRefreshToken(user)).pipe(
