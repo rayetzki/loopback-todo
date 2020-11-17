@@ -1,7 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { from, Observable, throwError } from "rxjs";
-import { catchError, map } from "rxjs/operators";
+import { catchError, map, switchMap } from "rxjs/operators";
+import { User } from "src/user/user.interface";
+import { UserService } from "src/user/user.service";
 import { DeleteResult, Repository } from "typeorm";
 import { FavouritesEntity } from "./favourites.entity";
 import { Favourite } from "./favourites.interface";
@@ -9,7 +11,8 @@ import { Favourite } from "./favourites.interface";
 @Injectable()
 export class FavouritesService {
     constructor(
-        @InjectRepository(FavouritesEntity) private readonly favouritesRepository: Repository<FavouritesEntity>
+        @InjectRepository(FavouritesEntity) private readonly favouritesRepository: Repository<FavouritesEntity>,
+        private readonly userService: UserService
     ) { }
 
     findAll(userId: string): Observable<Favourite[]> {
@@ -23,10 +26,14 @@ export class FavouritesService {
     }
 
     addFavourite(favourite: Favourite): Observable<Favourite> {
-        return from(this.favouritesRepository.save(favourite)).pipe(
-            map((favourite: Favourite) => favourite),
-            catchError(error => throwError(error))
-        );
+        return from(this.userService.findOne(favourite.userId)).pipe(
+            switchMap((user: User) => {
+                return from(this.favouritesRepository.save({ ...favourite, addedBy: user })).pipe(
+                    map((favourite: Favourite) => favourite),
+                    catchError(error => throwError(error))
+                );
+            })
+        )
     }
 
     removeFavourite(favourite: Favourite): Observable<boolean> {

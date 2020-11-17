@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsArray, IsEnum, IsNotEmpty, IsString, IsUrl } from "class-validator";
-import { Favourite } from "src/favourites/favourites.interface";
-import { User } from "src/user/user.interface";
+import { Favourite } from "../favourites/favourites.interface";
+import { User } from "../user/user.interface";
 
 export enum NutritionType {
     ANY = 'any',
