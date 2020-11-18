@@ -21,7 +21,7 @@ export class FavouritesService {
     findAll(userId: string): Observable<Favourite[]> {
         return from(this.favouritesRepository.find({
             where: { userId },
-            relations: ['addedBy']
+            relations: ['addedBy', 'recipe']
         })).pipe(
             map((favourites: Favourite[]) => favourites),
             catchError(error => throwError(error))

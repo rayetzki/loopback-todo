@@ -52,7 +52,7 @@ export class RecipeEntity {
     @ManyToOne(() => UserEntity, user => user.recipes, { onDelete: "CASCADE" })
     author: UserEntity;
 
-    @OneToOne(() => FavouritesEntity, favourites => favourites.recipe, { onDelete: "CASCADE" })
+    @OneToOne(() => FavouritesEntity, favourites => favourites.recipe)
     @JoinColumn()
     favourite: FavouritesEntity;
 }

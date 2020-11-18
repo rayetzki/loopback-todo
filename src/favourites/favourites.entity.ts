@@ -13,6 +13,6 @@ export class FavouritesEntity {
     @ManyToOne(() => UserEntity, user => user.favourites, { onDelete: "CASCADE" })
     addedBy: UserEntity;
 
-    @OneToOne(() => RecipeEntity, recipe => recipe.favourite, { onDelete: "CASCADE" })
+    @OneToOne(() => RecipeEntity, recipe => recipe.favourite)
     recipe: RecipeEntity;
 }
