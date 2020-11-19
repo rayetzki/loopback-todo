@@ -16,6 +16,8 @@ export class RecipesController {
 
     @ApiQuery({ name: 'id', type: 'string', required: false })
     @ApiQuery({ name: 'userId', type: 'string', required: false })
+    @ApiQuery({ name: 'page', type: 'number', required: false })
+    @ApiQuery({ name: 'limit', type: 'number', required: false })
     @UseGuards(JwtAuthGuard)
     @Get()
     find(
@@ -27,9 +29,9 @@ export class RecipesController {
         if (id) {
             return from(this.recipesService.findOne(id));
         } else if (userId) {
-            return from(this.recipesService.findByUser(userId, limit, page));
+            return from(this.recipesService.findByUser(userId, Number(limit), Number(page)));
         } else {
-            return from(this.recipesService.findAll(limit, page));
+            return from(this.recipesService.findAll(Number(limit), Number(page)));
         };
     }
 

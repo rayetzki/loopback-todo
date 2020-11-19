@@ -19,10 +19,10 @@ export class RecipesService {
         private readonly userService: UserService
     ) { }
 
-    findAll(limit: number, page: number): Observable<PaginatedRecipes> {
+    findAll(limit?: number, page?: number): Observable<PaginatedRecipes> {
         return from(this.recipesRepository.findAndCount({
-            skip: page,
-            take: limit,
+            skip: page || null,
+            take: limit || null,
             relations: ['author', 'favourite']
         })).pipe(
             map(([recipes, count]) => ({
