@@ -160,19 +160,23 @@ export class UserService {
     }
 
     refresh(id: string, refreshToken: string): Observable<JwtToken | unknown> {
-        return from(this.userRepository.findOneOrFail({ id })).pipe(
+        return from(this.userRepository.findOneOrFail(id, { select: ['refreshToken'] })).pipe(
             switchMap((user: User) => {
-                return from(this.authService.validateRefreshToken(refreshToken)).pipe(
-                    switchMap(() => {
-                        return from(this.authService.generateAccessRefreshPair(user)).pipe(
-                            switchMap((jwtToken: JwtToken) => {
-                                return from(this.userRepository.update(id, { refreshToken })).pipe(
-                                    map(() => jwtToken)
-                                )
-                            })
-                        )
-                    })
-                )
+                if (user.refreshToken !== refreshToken) {
+                    throw new ForbiddenException('Refresh token doesn\'t match');
+                } else {
+                    return from(this.authService.validateRefreshToken(refreshToken)).pipe(
+                        switchMap(() => {
+                            return from(this.authService.generateAccessRefreshPair(user)).pipe(
+                                switchMap((jwtToken: JwtToken) => {
+                                    return from(this.userRepository.update(id, { refreshToken })).pipe(
+                                        map(() => jwtToken)
+                                    )
+                                })
+                            )
+                        })
+                    )
+                }
             })
         )
     }
