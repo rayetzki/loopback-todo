@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { from, Observable, throwError } from 'rxjs';
-import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+import { DeleteResult, getRepository, Repository, UpdateResult } from 'typeorm';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { PaginatedUsers, User, UserRole } from './user.interface';
@@ -70,7 +70,11 @@ export class UserService {
     }
 
     search(name: string): Observable<User[]> {
-        return from(this.userRepository.find({ where: { name } })).pipe(
+        return from(getRepository(UserEntity)
+            .createQueryBuilder('user')
+            .where("user.name like :name", { name: `%${name}%` })
+            .getMany()
+        ).pipe(
             map((users: User[]) => users),
             catchError(error => throwError(error))
         );

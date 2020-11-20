@@ -27,18 +27,18 @@ export class UserController {
         return from(this.userService.findAll(limit, page));
     }
 
-    @ApiParam({ name: 'id', type: 'string', required: false })
-    @UseGuards(JwtAuthGuard, IsUserGuard)
-    @Get(':id')
-    findOne(@Param('id') id: string): Observable<User> {
-        return from(this.userService.findOne(id));
-    }
-
     @ApiQuery({ name: 'name', type: 'string', required: true })
     @UseGuards(JwtAuthGuard)
     @Get('/search')
     search(@Query('name') name: string): Observable<User[]> {
         return from(this.userService.search(name));
+    }
+
+    @ApiParam({ name: 'id', type: 'string', required: false })
+    @UseGuards(JwtAuthGuard, IsUserGuard)
+    @Get(':id')
+    findOne(@Param('id') id: string): Observable<User> {
+        return from(this.userService.findOne(id));
     }
 
     @Post()
