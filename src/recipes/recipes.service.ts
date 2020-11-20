@@ -1,15 +1,15 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from "@nestjs/common";
 import slugify from "slugify";
 import { InjectRepository } from "@nestjs/typeorm";
-import { DeleteResult, Repository, UpdateResult } from "typeorm";
+import { DeleteResult, getRepository, Repository, UpdateResult } from "typeorm";
 import { from, Observable, of, throwError } from "rxjs";
 import { catchError, filter, map, switchMap } from "rxjs/operators";
 import { RecipeEntity } from "./recipes.entity";
 import { PaginatedRecipes, Recipe, DayTime, DoNotEatAtNight } from "./recipes.interface";
-import { CloudinaryService } from "src/cloudinary/cloudinary.service";
+import { CloudinaryService } from "../cloudinary/cloudinary.service";
 import { UploadApiErrorResponse, UploadApiResponse } from "cloudinary";
-import { UserService } from "src/user/user.service";
-import { User } from "src/user/user.interface";
+import { UserService } from "../user/user.service";
+import { User } from "../user/user.interface";
 
 @Injectable()
 export class RecipesService {
@@ -56,6 +56,18 @@ export class RecipesService {
             })),
             catchError(error => throwError(error))
         );
+    }
+
+    search(condition: string): Observable<Recipe[]> {
+        return from(getRepository(RecipeEntity)
+            .createQueryBuilder('recipe')
+            .where('recipe.title ilike :title', { title: `%${condition}%` })
+            .orWhere('recipe.description ilike :desciption', { desciption: `%${condition}%` })
+            .getMany()
+        ).pipe(
+            map((recipes: Recipe[]) => recipes),
+            catchError(error => throwError(error))
+        )
     }
 
     create(userId: string, recipe: Recipe): Observable<Recipe> {

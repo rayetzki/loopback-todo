@@ -46,6 +46,14 @@ export class RecipesController {
         return from(this.recipesService.create(userId, recipe));
     }
 
+    @ApiResponse({ status: 200, description: "Recipes dependent on the provided string" })
+    @ApiQuery({ name: "condition", description: "Search condition" })
+    @UseGuards(JwtAuthGuard)
+    @Get('/search')
+    search(@Query('condition') condition: string): Observable<Recipe[]> {
+        return from(this.recipesService.search(condition));
+    }
+
     @ApiParam({ name: 'id', type: 'string', required: true })
     @UseGuards(JwtAuthGuard, IsUserGuard, AuthorGuard)
     @Put(':id')
