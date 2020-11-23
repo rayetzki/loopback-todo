@@ -32,9 +32,6 @@ export class UserEntity {
     @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
     role: UserRole;
 
-    @Column({ nullable: true, select: false })
-    refreshToken: string;
-
     @OneToMany(() => RecipeEntity, recipe => recipe.author, { onDelete: "CASCADE" })
     recipes: RecipeEntity[];
 

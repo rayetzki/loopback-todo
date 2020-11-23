@@ -27,9 +27,6 @@ export class User {
     @IsNotEmpty()
     email?: string
 
-    @IsString()
-    refreshToken?: string;
-
     @ApiProperty({
         default: NutritionType.ANY,
         enum: [

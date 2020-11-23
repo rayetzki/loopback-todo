@@ -156,11 +156,7 @@ export class UserService {
                 return from(this.authService.validateRefreshToken(refreshToken)).pipe(
                     switchMap(() => {
                         return from(this.authService.generateAccessRefreshPair(user)).pipe(
-                            switchMap((jwtToken: JwtToken) => {
-                                return from(this.userRepository.update(id, { refreshToken })).pipe(
-                                    map(() => jwtToken)
-                                )
-                            })
+                            map((jwtToken: JwtToken) => jwtToken)
                         )
                     })
                 )
