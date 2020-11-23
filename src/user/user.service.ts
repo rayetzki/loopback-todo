@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { from, Observable, throwError } from 'rxjs';
 import { DeleteResult, getRepository, Repository, UpdateResult } from 'typeorm';
@@ -128,18 +128,9 @@ export class UserService {
         return from(
             this.validate(email, password).pipe(
                 switchMap((user: User) => {
-                    if (user) {
-                        return this.authService.generateAccessRefreshPair(user).pipe(
-                            switchMap((jwtToken: JwtToken) => {
-                                return from(this.userRepository.update(
-                                    user.id,
-                                    { refreshToken: jwtToken.refreshToken }
-                                )).pipe(map(() => jwtToken))
-                            })
-                        );
-                    } else {
-                        throw new NotFoundException('Email or password are not correct');
-                    }
+                    return from(this.authService.generateAccessRefreshPair(user)).pipe(
+                        map((jwtToken: JwtToken) => jwtToken)
+                    )
                 })
             )
         );
@@ -160,23 +151,19 @@ export class UserService {
     }
 
     refresh(id: string, refreshToken: string): Observable<JwtToken | unknown> {
-        return from(this.userRepository.findOneOrFail(id, { select: ['refreshToken'] })).pipe(
+        return from(this.userRepository.findOneOrFail(id)).pipe(
             switchMap((user: User) => {
-                if (user.refreshToken !== refreshToken) {
-                    throw new ForbiddenException('Refresh token doesn\'t match');
-                } else {
-                    return from(this.authService.validateRefreshToken(refreshToken)).pipe(
-                        switchMap(() => {
-                            return from(this.authService.generateAccessRefreshPair(user)).pipe(
-                                switchMap((jwtToken: JwtToken) => {
-                                    return from(this.userRepository.update(id, { refreshToken })).pipe(
-                                        map(() => jwtToken)
-                                    )
-                                })
-                            )
-                        })
-                    )
-                }
+                return from(this.authService.validateRefreshToken(refreshToken)).pipe(
+                    switchMap(() => {
+                        return from(this.authService.generateAccessRefreshPair(user)).pipe(
+                            switchMap((jwtToken: JwtToken) => {
+                                return from(this.userRepository.update(id, { refreshToken })).pipe(
+                                    map(() => jwtToken)
+                                )
+                            })
+                        )
+                    })
+                )
             })
         )
     }
