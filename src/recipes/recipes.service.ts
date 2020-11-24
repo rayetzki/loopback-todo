@@ -10,13 +10,15 @@ import { CloudinaryService } from "../cloudinary/cloudinary.service";
 import { UploadApiErrorResponse, UploadApiResponse } from "cloudinary";
 import { UserService } from "../user/user.service";
 import { User } from "../user/user.interface";
+import { FavouritesService } from "src/favourites/favourites.service";
 
 @Injectable()
 export class RecipesService {
     constructor(
         @InjectRepository(RecipeEntity) private readonly recipesRepository: Repository<RecipeEntity>,
         private readonly cloudinaryService: CloudinaryService,
-        private readonly userService: UserService
+        private readonly userService: UserService,
+        private readonly favouritesService: FavouritesService
     ) { }
 
     findAll(limit?: number, page?: number): Observable<PaginatedRecipes> {
@@ -125,7 +127,13 @@ export class RecipesService {
 
     delete(id: string): Observable<DeleteResult> {
         return from(this.recipesRepository.delete(id)).pipe(
-            map((deleteResult: DeleteResult) => deleteResult),
+            switchMap((deleteResult: DeleteResult) => {
+                if (deleteResult.affected === 1) {
+                    return from(this.favouritesService.removeAll(id)).pipe(
+                        map((deleted: DeleteResult) => deleted)
+                    )
+                }
+            }),
             catchError(error => throwError(error))
         );
     }

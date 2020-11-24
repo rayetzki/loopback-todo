@@ -1,6 +1,5 @@
-import { IsArray, IsObject, IsUUID } from "class-validator";
+import { IsArray, IsUUID } from "class-validator";
 import { Recipe } from "../recipes/recipes.interface";
-import { User } from "../user/user.interface";
 
 export class Favourite {
     @IsUUID()
@@ -8,9 +7,6 @@ export class Favourite {
 
     @IsUUID()
     recipeId: string;
-
-    @IsObject()
-    addedBy?: User;
 
     @IsArray()
     recipe?: Recipe;
