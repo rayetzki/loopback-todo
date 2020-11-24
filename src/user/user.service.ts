@@ -52,8 +52,7 @@ export class UserService {
     findAll(limit: number, page: number): Observable<PaginatedUsers> {
         return from(this.userRepository.findAndCount({
             skip: page,
-            take: limit,
-            relations: ['favourites']
+            take: limit
         })).pipe(
             map(([users, count]) => ({
                 users,
@@ -66,7 +65,7 @@ export class UserService {
     }
 
     findOne(id: string): Observable<User> {
-        return from(this.userRepository.findOne(id, { relations: ['favourites'] })).pipe(map((user: User) => user));
+        return from(this.userRepository.findOne(id)).pipe(map((user: User) => user));
     }
 
     search(name: string): Observable<User[]> {
