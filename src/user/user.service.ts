@@ -142,7 +142,10 @@ export class UserService {
         )).pipe(
             switchMap((user: User) =>
                 this.authService.comparePasswords(password, user.password).pipe(
-                    map((match: boolean) => match && user),
+                    map((match: boolean) => {
+                        if (!match) throw new BadRequestException('Пароль не подходит');
+                        return user;
+                    }),
                     catchError(error => throwError(error))
                 )
             )
