@@ -44,9 +44,9 @@ export class RecipesService {
 
     findByUser(userId: string, page: number, limit: number): Observable<PaginatedRecipes> {
         return from(this.recipesRepository.findAndCount({
-            where: { author: userId },
             skip: page,
             take: limit,
+            where: { author: userId },
             relations: ['author', 'favourite']
         })).pipe(
             map(([recipes, count]) => ({

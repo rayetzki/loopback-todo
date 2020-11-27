@@ -31,7 +31,7 @@ export class RecipesController {
         if (id) {
             return from(this.recipesService.findOne(id));
         } else if (userId) {
-            return from(this.recipesService.findByUser(userId, Number(limit), Number(page)));
+            return from(this.recipesService.findByUser(userId, Number(page), Number(limit)));
         } else if (dayTime) {
             return from(this.recipesService.findByDaytime(limit, page, dayTime));
         } else {
