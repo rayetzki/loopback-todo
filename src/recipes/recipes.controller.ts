@@ -16,27 +16,35 @@ export class RecipesController {
 
     @ApiQuery({ name: 'id', type: 'string', required: false })
     @ApiQuery({ name: 'dayTime', type: 'enum', required: false })
-    @ApiQuery({ name: 'userId', type: 'string', required: false })
+    @ApiQuery({ name: 'userId', type: 'string', required: true })
     @ApiQuery({ name: 'page', type: 'number', required: false })
     @ApiQuery({ name: 'limit', type: 'number', required: false })
     @UseGuards(JwtAuthGuard)
     @Get()
     find(
+        @Query('userId') userId: string,
         @Query('id') id?: string,
-        @Query('userId') userId?: string,
         @Query('dayTime') dayTime?: DayTime,
         @Query('page') page = 0,
         @Query('limit') limit = 0,
     ): Observable<PaginatedRecipes | Recipe> {
         if (id) {
-            return from(this.recipesService.findOne(id));
-        } else if (userId) {
-            return from(this.recipesService.findByUser(userId, Number(page), Number(limit)));
+            return from(this.recipesService.findOne(userId, id));
         } else if (dayTime) {
-            return from(this.recipesService.findByDaytime(limit, page, dayTime));
+            return from(this.recipesService.findByDaytime(userId, limit, page, dayTime));
         } else {
-            return from(this.recipesService.findAll(Number(limit), Number(page)));
+            return from(this.recipesService.findAll(userId, Number(limit), Number(page)));
         };
+    }
+
+    @Get('/byUser')
+    @UseGuards(JwtAuthGuard)
+    findByUser(
+        @Query('userId') userId: string,
+        @Query('page') page = 0,
+        @Query('limit') limit = 0
+    ) {
+        return from(this.recipesService.findByUser(userId, Number(page), Number(limit)));
     }
 
     @ApiBody({ type: () => Recipe })

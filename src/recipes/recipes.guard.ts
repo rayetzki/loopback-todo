@@ -17,7 +17,7 @@ export class AuthorGuard implements CanActivate {
         const user: User = request.user;
         const recipeId: string = request.params.id;
 
-        return from(this.recipesService.findOne(recipeId)).pipe(
+        return from(this.recipesService.findOne(user.id, recipeId)).pipe(
             map((recipe: Recipe) => {
                 if (!recipe) {
                     throw new BadRequestException("Recipe doesn't exist");

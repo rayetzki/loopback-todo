@@ -25,7 +25,7 @@ export class Recipe {
     updatedAt: Date
     slug: string
     author: User
-    favourite: Favourite;
+    favourite: Favourite
 
     @ApiProperty()
     @IsString()

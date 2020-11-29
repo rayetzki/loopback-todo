@@ -4,6 +4,8 @@ import { from, Observable, throwError } from "rxjs";
 import { catchError, map, switchMap } from "rxjs/operators";
 import { Recipe } from "src/recipes/recipes.interface";
 import { RecipesService } from "src/recipes/recipes.service";
+import { User } from "src/user/user.interface";
+import { UserService } from "src/user/user.service";
 import { DeleteResult, getRepository, Repository } from "typeorm";
 import { FavouritesEntity } from "./favourites.entity";
 import { Favourite } from "./favourites.interface";
@@ -13,7 +15,8 @@ export class FavouritesService {
     constructor(
         @InjectRepository(FavouritesEntity) private readonly favouritesRepository: Repository<FavouritesEntity>,
         @Inject(forwardRef(() => RecipesService))
-        private readonly recipesService: RecipesService
+        private readonly recipesService: RecipesService,
+        private readonly usersService: UserService
     ) { }
 
     findAll(userId: string): Observable<Favourite[]> {
@@ -27,15 +30,20 @@ export class FavouritesService {
     }
 
     addFavourite(favourite: Favourite): Observable<Favourite> {
-        return from(this.recipesService.findOne(favourite.recipeId)).pipe(
+        return from(this.recipesService.findOne(favourite.userId, favourite.recipeId)).pipe(
             switchMap((recipe: Recipe) => {
-                return from(this.favouritesRepository.save({
-                    ...favourite,
-                    recipe
-                })).pipe(
-                    map((favourite: Favourite) => favourite),
-                    catchError(error => throwError(error))
-                );
+                return from(this.usersService.findOne(favourite.userId)).pipe(
+                    switchMap((user: User) => {
+                        return from(this.favouritesRepository.save({
+                            ...favourite,
+                            recipe,
+                            user
+                        })).pipe(
+                            map((favourite: Favourite) => favourite),
+                            catchError(error => throwError(error))
+                        );
+                    })
+                )
             })
         )
     }

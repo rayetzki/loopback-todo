@@ -21,12 +21,14 @@ export class RecipesService {
         private readonly favouritesService: FavouritesService
     ) { }
 
-    findAll(limit?: number, page?: number): Observable<PaginatedRecipes> {
-        return from(this.recipesRepository.findAndCount({
-            skip: page,
-            take: limit,
-            relations: ['author', 'favourite']
-        })).pipe(
+    findAll(userId: string, limit?: number, page?: number): Observable<PaginatedRecipes> {
+        return from(getRepository(RecipeEntity)
+            .createQueryBuilder('recipes')
+            .leftJoinAndSelect('recipes.favourite', 'favourites', 'favourites.userId = :userId', { userId })
+            .take(limit)
+            .skip(page)
+            .getManyAndCount()
+        ).pipe(
             map(([recipes, count]) => ({
                 recipes,
                 total: count,
@@ -38,17 +40,26 @@ export class RecipesService {
         );
     }
 
-    findOne(id: string): Observable<Recipe> {
-        return from(this.recipesRepository.findOne(id, { relations: ['author', 'favourite'] }));
+    findOne(userId: string, id: string): Observable<Recipe> {
+        return from(getRepository(RecipeEntity)
+            .createQueryBuilder('recipe')
+            .leftJoinAndSelect('recipe.author', 'users')
+            .where('recipe.id = :id', { id })
+            .leftJoinAndSelect('recipe.favourite', 'favourites', 'favourites.userId = :userId', { userId })
+            .getOne()
+        );
     }
 
     findByUser(userId: string, page: number, limit: number): Observable<PaginatedRecipes> {
-        return from(this.recipesRepository.findAndCount({
-            skip: page,
-            take: limit,
-            where: { author: userId },
-            relations: ['author', 'favourite']
-        })).pipe(
+        return from(getRepository(RecipeEntity)
+            .createQueryBuilder('recipe')
+            .leftJoinAndSelect('recipe.author', 'users')
+            .where('recipe.author.id = :userId', { userId })
+            .leftJoinAndSelect('recipe.favourite', 'favourites', 'favourites.userId = :userId', { userId })
+            .take(limit)
+            .skip(page)
+            .getManyAndCount()
+        ).pipe(
             map(([recipes, count]) => ({
                 recipes,
                 total: count,
@@ -60,13 +71,15 @@ export class RecipesService {
         );
     }
 
-    findByDaytime(limit?: number, page?: number, dayTime?: DayTime) {
-        return from(this.recipesRepository.findAndCount({
-            skip: page,
-            take: limit,
-            where: { dayTime },
-            relations: ['author', 'favourite']
-        })).pipe(
+    findByDaytime(userId: string, limit?: number, page?: number, dayTime?: DayTime) {
+        return from(getRepository(RecipeEntity)
+            .createQueryBuilder('recipes')
+            .leftJoinAndSelect('recipes.favourite', 'favourites', 'favourites.userId = :userId', { userId })
+            .where('recipes.dayTime = :dayTime', { dayTime })
+            .take(limit)
+            .skip(page)
+            .getManyAndCount()
+        ).pipe(
             map(([recipes, count]) => ({
                 recipes,
                 total: count,
