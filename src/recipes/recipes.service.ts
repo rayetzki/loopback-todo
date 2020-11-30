@@ -50,12 +50,12 @@ export class RecipesService {
         );
     }
 
-    findByUser(userId: string, page: number, limit: number): Observable<PaginatedRecipes> {
+    findByUser(userId: string, currentUser: string, page: number, limit: number): Observable<PaginatedRecipes> {
         return from(getRepository(RecipeEntity)
             .createQueryBuilder('recipe')
             .leftJoinAndSelect('recipe.author', 'users')
             .where('recipe.author.id = :userId', { userId })
-            .leftJoinAndSelect('recipe.favourite', 'favourites', 'favourites.userId = :userId', { userId })
+            .leftJoinAndSelect('recipe.favourite', 'favourites', 'favourites.userId = :currentUser', { currentUser })
             .take(limit)
             .skip(page)
             .getManyAndCount()

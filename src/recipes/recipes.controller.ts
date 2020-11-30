@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, UploadedFile, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, UploadedFile, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
 import { from, Observable } from "rxjs";
 import { RecipesService } from "./recipes.service";
 import { DayTime, DoNotEatAtNight, PaginatedRecipes, Recipe, RecipeBanner } from "./recipes.interface";
@@ -7,6 +7,8 @@ import { AuthorGuard } from "./recipes.guard";
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiParam, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { DeleteResult } from "typeorm";
+import { Request } from "express";
+import { User } from "src/user/user.interface";
 
 @ApiTags('recipes')
 @ApiBearerAuth()
@@ -16,35 +18,38 @@ export class RecipesController {
 
     @ApiQuery({ name: 'id', type: 'string', required: false })
     @ApiQuery({ name: 'dayTime', type: 'enum', required: false })
-    @ApiQuery({ name: 'userId', type: 'string', required: true })
     @ApiQuery({ name: 'page', type: 'number', required: false })
     @ApiQuery({ name: 'limit', type: 'number', required: false })
     @UseGuards(JwtAuthGuard)
     @Get()
     find(
-        @Query('userId') userId: string,
+        @Req() request: Request,
         @Query('id') id?: string,
         @Query('dayTime') dayTime?: DayTime,
         @Query('page') page = 0,
         @Query('limit') limit = 0,
     ): Observable<PaginatedRecipes | Recipe> {
+        const user: User = request.user;
+
         if (id) {
-            return from(this.recipesService.findOne(userId, id));
+            return from(this.recipesService.findOne(user.id, id));
         } else if (dayTime) {
-            return from(this.recipesService.findByDaytime(userId, limit, page, dayTime));
+            return from(this.recipesService.findByDaytime(user.id, limit, page, dayTime));
         } else {
-            return from(this.recipesService.findAll(userId, Number(limit), Number(page)));
+            return from(this.recipesService.findAll(user.id, Number(limit), Number(page)));
         };
     }
 
     @Get('/byUser')
     @UseGuards(JwtAuthGuard)
     findByUser(
+        @Req() request: Request,
         @Query('userId') userId: string,
         @Query('page') page = 0,
         @Query('limit') limit = 0
     ) {
-        return from(this.recipesService.findByUser(userId, Number(page), Number(limit)));
+        const currentUser: User = request.user;
+        return from(this.recipesService.findByUser(userId, currentUser.id, Number(page), Number(limit)));
     }
 
     @ApiBody({ type: () => Recipe })
@@ -52,10 +57,11 @@ export class RecipesController {
     @Post()
     @UsePipes(ValidationPipe)
     create(
-        @Query('userId') userId: string,
+        @Req() request: Request,
         @Body() recipe: Recipe
     ): Observable<Recipe> {
-        return from(this.recipesService.create(userId, recipe));
+        const user: User = request.user;
+        return from(this.recipesService.create(user.id, recipe));
     }
 
     @ApiResponse({ status: 200, description: "Recipes dependent on the provided string" })
@@ -82,7 +88,7 @@ export class RecipesController {
 
     @ApiQuery({ name: 'id', type: 'string', required: true })
     @ApiBody({ description: 'User avatar', type: RecipeBanner })
-    @UseGuards(JwtAuthGuard, IsUserGuard)
+    @UseGuards(JwtAuthGuard, IsUserGuard, AuthorGuard)
     @ApiConsumes('multipart/form-data')
     @UseInterceptors(FileInterceptor('banner'))
     @Post('/banner')

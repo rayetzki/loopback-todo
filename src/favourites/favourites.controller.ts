@@ -1,7 +1,9 @@
-import { Controller, Delete, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { Controller, Delete, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Request } from 'express';
 import { from, Observable } from 'rxjs';
 import { IsUserGuard, JwtAuthGuard } from 'src/auth/auth.guard';
+import { User } from 'src/user/user.interface';
 import { Favourite } from './favourites.interface';
 import { FavouritesService } from './favourites.service';
 
@@ -12,31 +14,31 @@ export class FavouritesController {
     constructor(private readonly favouritesService: FavouritesService) { }
 
     @Get()
-    @ApiQuery({ description: "Currently authenticated user", name: 'userId', type: 'string', required: true })
     @UseGuards(JwtAuthGuard, IsUserGuard)
-    findAll(@Query('userId') userId: string): Observable<Favourite[]> {
-        return from(this.favouritesService.findAll(userId));
+    findAll(@Req() request: Request): Observable<Favourite[]> {
+        const user: User = request.user;
+        return from(this.favouritesService.findAll(user.id));
     }
 
     @Post()
     @ApiQuery({ description: "Desired recipe id to add to favourites", name: 'recipeId', type: 'string', required: true })
-    @ApiQuery({ description: "Currently authenticated user", name: 'userId', type: 'string', required: true })
     @UseGuards(JwtAuthGuard, IsUserGuard)
     addFavourite(
-        @Query('userId') userId: string,
+        @Req() request: Request,
         @Query('recipeId') recipeId: string
     ): Observable<Favourite> {
-        return from(this.favouritesService.addFavourite({ userId, recipeId }));
+        const user: User = request.user;
+        return from(this.favouritesService.addFavourite({ userId: user.id, recipeId }));
     }
 
     @Delete()
     @ApiQuery({ description: "Recipe id to remove from favourites", name: 'recipeId', type: 'string', required: true })
-    @ApiQuery({ description: "Currently authenticated user", name: 'userId', type: 'string', required: true })
     @UseGuards(JwtAuthGuard, IsUserGuard)
     removeFavourite(
-        @Query('userId') userId: string,
+        @Req() request: Request,
         @Query('recipeId') recipeId: string
     ): Observable<boolean> {
-        return from(this.favouritesService.removeFavourite({ userId, recipeId }));
+        const user: User = request.user;
+        return from(this.favouritesService.removeFavourite({ userId: user.id, recipeId }));
     }
 }
