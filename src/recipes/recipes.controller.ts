@@ -40,6 +40,9 @@ export class RecipesController {
         };
     }
 
+    @ApiQuery({ name: 'userId', type: 'string', required: true })
+    @ApiQuery({ name: 'page', type: 'number', required: false })
+    @ApiQuery({ name: 'limit', type: 'number', required: false })
     @Get('/byUser')
     @UseGuards(JwtAuthGuard)
     findByUser(
