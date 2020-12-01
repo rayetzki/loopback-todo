@@ -91,6 +91,19 @@ export class RecipesService {
         );
     }
 
+    findAuthorRecipe(recipeId: string, userId: string): Observable<Recipe> {
+        return from(getRepository(RecipeEntity)
+            .createQueryBuilder('recipe')
+            .select()
+            .where('recipe.id = :recipeId', { recipeId })
+            .andWhere('recipe.author.id = :userId', { userId })
+            .getOne()
+        ).pipe(
+            map((recipe: Recipe) => recipe),
+            catchError(error => throwError(error))
+        )
+    }
+
     search(condition: string): Observable<Recipe[]> {
         return from(getRepository(RecipeEntity)
             .createQueryBuilder('recipe')

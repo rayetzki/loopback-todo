@@ -2,7 +2,7 @@ import { BadRequestException, CanActivate, ExecutionContext, Injectable } from "
 import { Request } from "express";
 import { from, Observable, throwError } from "rxjs";
 import { catchError, map } from "rxjs/operators";
-import { User, UserRole } from "src/user/user.interface";
+import { User } from "src/user/user.interface";
 import { Recipe } from "./recipes.interface";
 import { RecipesService } from "./recipes.service";
 
@@ -15,18 +15,12 @@ export class AuthorGuard implements CanActivate {
     canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
         const request: Request = context.switchToHttp().getRequest();
         const user: User = request.user;
-        const recipeId: string = request.params.id;
+        const recipeId = request.query.id as string;
 
-        return from(this.recipesService.findOne(user.id, recipeId)).pipe(
+        return from(this.recipesService.findAuthorRecipe(recipeId, user.id)).pipe(
             map((recipe: Recipe) => {
-                if (!recipe) {
-                    throw new BadRequestException("You didn't add this recipe");
-                } else if (
-                    recipe.author.id === user.id &&
-                    [UserRole.EDITOR, UserRole.ADMIN].includes(recipe.author.role)
-                ) {
-                    return true;
-                } else return false
+                if (!recipe) throw new BadRequestException("You didn't add this recipe");
+                else return true;
             }),
             catchError(error => throwError(error))
         )
