@@ -20,7 +20,7 @@ export class AuthorGuard implements CanActivate {
         return from(this.recipesService.findOne(user.id, recipeId)).pipe(
             map((recipe: Recipe) => {
                 if (!recipe) {
-                    throw new BadRequestException("Recipe doesn't exist");
+                    throw new BadRequestException("You didn't add this recipe");
                 } else if (
                     recipe.author.id === user.id &&
                     [UserRole.EDITOR, UserRole.ADMIN].includes(recipe.author.role)
