@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { from, Observable, of } from 'rxjs';
+import { from, iif, Observable, of } from 'rxjs';
 import { compare, hash } from 'bcrypt';
 import { User } from '../user/user.interface';
 import { catchError, map, switchMap } from 'rxjs/operators';
@@ -47,28 +47,32 @@ export class AuthService {
         })).pipe(map((refreshToken: string) => refreshToken));
     }
 
-    validateAccessToken(accessToken: string): Observable<boolean> {
+    validateAccessToken(accessToken: string): Observable<boolean | ForbiddenException> {
         const expiresIn = Number(this.configService.get('ACCESS_EXPIRES_IN'));
         return from(this.jwtService.verifyAsync(accessToken, {
             secret: this.configService.get('ACCESS_SECRET')
         })).pipe(
             switchMap((valid: boolean) => {
-                if (valid) {
-                    return from(this.validateExpirationTime(expiresIn));
-                } else throw new ForbiddenException('Token is not valid');
+                return iif(
+                    () => valid === true,
+                    from(this.validateExpirationTime(expiresIn)),
+                    of(new ForbiddenException('Token is not valid'))
+                )
             })
         );
     }
 
-    validateRefreshToken(refreshToken: string): Observable<boolean> {
+    validateRefreshToken(refreshToken: string): Observable<boolean | ForbiddenException> {
         const refreshExpiresIn = Number(this.configService.get('REFRESH_EXPIRES_IN'));
         return from(this.jwtService.verifyAsync(refreshToken, {
             secret: this.configService.get('REFRESH_SECRET')
         })).pipe(
             switchMap((valid: boolean) => {
-                if (valid) {
-                    return from(this.validateExpirationTime(refreshExpiresIn));
-                } else throw new ForbiddenException('Token is not valid');
+                return iif(
+                    () => valid === true,
+                    from(this.validateExpirationTime(refreshExpiresIn)),
+                    of(new ForbiddenException('Token is not valid'))
+                )
             })
         );
     }
@@ -81,10 +85,10 @@ export class AuthService {
         return from(hash(password, 10));
     }
 
-    comparePasswords(newPassword: string, passwordHash: string): Observable<boolean | unknown> {
+    comparePasswords(newPassword: string, passwordHash: string): Observable<boolean | Error> {
         return from(compare(newPassword, passwordHash)).pipe(
             map((same: boolean) => same),
-            catchError(error => of({ error: error.message }))
+            catchError((error: Error) => of(error))
         );
     }
 }

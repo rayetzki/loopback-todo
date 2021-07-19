@@ -1,14 +1,14 @@
 import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { from, Observable, throwError } from 'rxjs';
+import { UploadApiErrorResponse, UploadApiResponse } from 'cloudinary';
+import { from, iif, Observable, of, throwError } from 'rxjs';
 import { DeleteResult, getRepository, Repository, UpdateResult } from 'typeorm';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { PaginatedUsers, User, UserRole } from './user.interface';
 import { AuthService } from '../auth/auth.service';
 import { UserEntity } from './user.entity';
-import { JwtToken } from 'src/auth/auth.interface';
-import { UploadApiErrorResponse, UploadApiResponse } from 'cloudinary';
+import { JwtToken } from '../auth/auth.interface';
 
 @Injectable()
 export class UserService {
@@ -18,21 +18,14 @@ export class UserService {
         private readonly cloudinaryService: CloudinaryService
     ) { }
 
-    create(user: User): Observable<User> {
-        if (user.role === UserRole.ADMIN) {
-            throw new ForbiddenException("Ты не можешь стать админом");
-        } else {
-            return from(
-                this.userRepository.findOne({ email: user.email })
-            ).pipe(
+    create(user: User): Observable<User | BadRequestException | ForbiddenException> {
+        return iif(
+            () => user.role !== UserRole.ADMIN,
+            from(this.userRepository.findOne({ email: user.email })).pipe(
                 switchMap((foundUser: User) => {
-                    if (
-                        foundUser && foundUser.name === user.name ||
-                        foundUser && foundUser.email === user.email
-                    ) {
-                        throw new BadRequestException("User with such email or name already exist")
-                    } else if (!foundUser) {
-                        return this.authService
+                    return iif(
+                        () => foundUser?.name !== user.name || foundUser.email !== user.email,
+                        from(this.authService
                             .hashPassword(user.password)
                             .pipe(switchMap((passwordHash: string) => {
                                 return from(this.userRepository.save({
@@ -43,10 +36,13 @@ export class UserService {
                                     catchError(error => throwError(error))
                                 )
                             }))
-                    }
+                        ),
+                        of(new BadRequestException("User with such email or name already exist"))
+                    )
                 })
-            )
-        }
+            ),
+            of(new ForbiddenException("Ты не можешь стать админом"))
+        );
     }
 
     findAll(limit: number, page: number): Observable<PaginatedUsers> {
@@ -79,13 +75,12 @@ export class UserService {
         );
     }
 
-    updateOne(id: string, user: User): Observable<User> {
+    updateOne(id: string, user: User): Observable<User | ForbiddenException> {
         return from(this.userRepository.findOne(id)).pipe(
             switchMap((foundUser: User) => {
-                if (foundUser.role !== UserRole.ADMIN && user.role === UserRole.ADMIN) {
-                    throw new ForbiddenException("Ты не можешь стать админом");
-                } else {
-                    return from(this.userRepository.update(id, user)).pipe(
+                return iif(
+                    () => foundUser.role !== UserRole.ADMIN && user.role === UserRole.ADMIN,
+                    from(this.userRepository.update(id, user)).pipe(
                         switchMap((updateResult: UpdateResult) => {
                             if (updateResult.affected === 1) {
                                 return from(this.findOne(id)).pipe(
@@ -94,10 +89,11 @@ export class UserService {
                                 )
                             }
                         })
-                    );
-                };
+                    ),
+                    of(new ForbiddenException("Ты не можешь стать админом"))
+                )
             })
-        )
+        );
     }
 
     updateRole(id: string, role: UserRole): Observable<UpdateResult> {

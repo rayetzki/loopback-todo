@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, UploadedFile, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put, Query, Req, UploadedFile, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
 import { from, Observable } from "rxjs";
 import { RecipesService } from "./recipes.service";
 import { DayTime, DoNotEatAtNight, PaginatedRecipes, Recipe, RecipeBanner } from "./recipes.interface";
@@ -62,7 +62,7 @@ export class RecipesController {
     create(
         @Req() request: Request,
         @Body() recipe: Recipe
-    ): Observable<Recipe> {
+    ): Observable<Recipe | BadRequestException> {
         const user: User = request.user;
         return from(this.recipesService.create(user.id, recipe));
     }

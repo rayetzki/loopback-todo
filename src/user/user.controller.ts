@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UploadedFile, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiBody, ApiConsumes, ApiParam, ApiQuery, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { from, Observable } from 'rxjs';
 import { DeleteResult, UpdateResult } from 'typeorm';
 import { PaginatedUsers, User, UserRole, UserAvatar } from './user.interface';
@@ -7,7 +8,6 @@ import { UserService } from './user.service';
 import { Roles } from '../auth/auth.decorator';
 import { RolesGuard } from '../auth/role.guard';
 import { IsUserGuard, JwtAuthGuard } from '../auth/auth.guard';
-import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('users')
 @ApiBearerAuth()

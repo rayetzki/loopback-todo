@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, InternalServerErrorException } from "@
 import slugify from "slugify";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DeleteResult, getRepository, Repository, UpdateResult } from "typeorm";
-import { from, Observable, of, throwError } from "rxjs";
+import { from, iif, Observable, of, throwError } from "rxjs";
 import { catchError, filter, map, switchMap } from "rxjs/operators";
 import { RecipeEntity } from "./recipes.entity";
 import { PaginatedRecipes, Recipe, DayTime, DoNotEatAtNight } from "./recipes.interface";
@@ -10,7 +10,7 @@ import { CloudinaryService } from "../cloudinary/cloudinary.service";
 import { UploadApiErrorResponse, UploadApiResponse } from "cloudinary";
 import { UserService } from "../user/user.service";
 import { User } from "../user/user.interface";
-import { FavouritesService } from "src/favourites/favourites.service";
+import { FavouritesService } from "../favourites/favourites.service";
 
 @Injectable()
 export class RecipesService {
@@ -116,26 +116,24 @@ export class RecipesService {
         )
     }
 
-    create(userId: string, recipe: Recipe): Observable<Recipe> {
+    create(userId: string, recipe: Recipe): Observable<Recipe | BadRequestException> {
         return from(this.recipesRepository.findOne({ title: recipe.title })).pipe(
             switchMap((foundRecipe: Recipe) => {
-                if (foundRecipe && foundRecipe.title === recipe.title) {
-                    throw new BadRequestException('Recipe with such name already exist');
-                } else {
-                    return from(this.generateSlug(recipe.title)).pipe(
+                return iif(
+                    () => foundRecipe.title !== recipe.title,
+                    from(this.generateSlug(recipe.title)).pipe(
                         switchMap((slug: string) => {
                             return from(this.userService.findOne(userId)).pipe(
                                 switchMap((user: User) =>
                                     this.recipesRepository.save({ ...recipe, slug, author: user })
                                 )
                             );
-                        }),
-                        catchError(error => throwError(error))
-                    );
-                }
+                        })),
+                    of(new BadRequestException('Recipe with such name already exist'))
+                )
             })
         );
-    }
+    };
 
     update(id: string, recipe: Recipe): Observable<Recipe> {
         return from(this.recipesRepository.update(id, recipe)).pipe(
@@ -198,16 +196,16 @@ export class RecipesService {
             dayTime = DayTime.DINNER;
         };
 
-        if (dayTime) {
-            return from(this.recipesRepository.findAndCount({ where: { dayTime } })).pipe(
+        return iif(
+            () => dayTime !== undefined, 
+            from(this.recipesRepository.findAndCount({ where: { dayTime } })).pipe(
                 filter(([recipes, count]) => recipes.length > 0 && count > 0),
                 map(([recipes, count]) => recipes[Math.floor(Math.random() * count)]),
                 catchError(error => throwError(error))
-            );
-        } else {
-            return of({
+            ),
+            of({
                 message: "Кушать ночью очень вредно для здоровья. Мы рекоммендуем спать в ночное время. Спокойной ночи!"
             })
-        }
+        );
     }
 }
